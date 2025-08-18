@@ -103,13 +103,13 @@ export default function DashboardLayout({ children }) {
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     active 
                         ? 'bg-brand-highlight text-brand-primary shadow-md' 
-                        : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent'
+                        : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent bg-gray-100'
                     }`}
                 >
                   <Icon className={`mr-3 h-5 w-5 ${
                     active 
                         ? 'text-brand-secondary' 
-                        : 'text-brand-secondary group-hover:text-brand-accent'
+                        : 'text-brand-secondary group-hover:text-brand-accent hover:bg-gray-200'
                     }`} />
                   {item.name}
                 </a>
@@ -153,7 +153,7 @@ export default function DashboardLayout({ children }) {
                     className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                       active 
                         ? 'bg-brand-highlight text-brand-primary shadow-md' 
-                        : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent'
+                        : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent hover:bg-gray-100 hover:bg-gray-200'
                     }`}
                   >
                     <Icon className={`mr-3 h-5 w-5 ${
