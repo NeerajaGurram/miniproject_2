@@ -93,6 +93,11 @@ app.use('/api/consultancy', consultancyRoutes);
 app.use('/api/infrastructure', infrastructureRoutes);
 app.use('/api/s-c-w-fdp-g', require('./src/routes/s-c-w-fdp-g'));
 
+
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ 
