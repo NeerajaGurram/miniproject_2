@@ -1,0 +1,96 @@
+@import "tailwindcss";
+
+:root {
+  /* Brand Color Palette */
+  --color-primary: #1c1f4c;      /* Dark Blue - Primary brand color */
+  --color-secondary: #00848c;    /* Teal - Secondary accent */
+  --color-accent: #037272;       /* Dark Teal - Hover states */
+  --color-highlight: #fccf17;    /* Bright Yellow - Highlights */
+  --color-warm: #fec20f;         /* Orange-Yellow - Secondary highlights */
+  --color-cream: #edebd9;        /* Off-White - Backgrounds */
+  
+  /* Semantic Colors */
+  --background: var(--color-cream);
+  --foreground: var(--color-primary);
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --text-primary: var(--color-primary);
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--color-primary);
+  --color-secondary: var(--color-secondary);
+  --color-accent: var(--color-accent);
+  --color-highlight: var(--color-highlight);
+  --color-warm: var(--color-warm);
+  --color-cream: var(--color-cream);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1a1a1a;
+    --foreground: var(--color-cream);
+    --card-bg: #2d2d2d;
+    --border-color: #404040;
+    --text-primary: var(--color-cream);
+    --text-secondary: #d1d5db;
+    --text-muted: #9ca3af;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Custom utility classes for the brand colors */
+.bg-brand-primary { background-color: var(--color-primary); }
+.bg-brand-secondary { background-color: var(--color-secondary); }
+.bg-brand-accent { background-color: var(--color-accent); }
+.bg-brand-highlight { background-color: var(--color-highlight); }
+.bg-brand-warm { background-color: var(--color-warm); }
+.bg-brand-cream { background-color: var(--color-cream); }
+
+.text-brand-primary { color: var(--color-primary); }
+.text-brand-secondary { color: var(--color-secondary); }
+.text-brand-accent { color: var(--color-accent); }
+.text-brand-highlight { color: var(--color-highlight); }
+.text-brand-warm { color: var(--color-warm); }
+.text-brand-cream { color: var(--color-cream); }
+
+.border-brand-primary { border-color: var(--color-primary); }
+.border-brand-secondary { border-color: var(--color-secondary); }
+.border-brand-accent { border-color: var(--color-accent); }
+.border-brand-highlight { border-color: var(--color-highlight); }
+.border-brand-warm { border-color: var(--color-warm); }
+.border-brand-cream { border-color: var(--color-cream); }
+
+/* Gradient utilities */
+.bg-gradient-brand {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+}
+
+.bg-gradient-warm {
+  background: linear-gradient(135deg, var(--color-highlight) 0%, var(--color-warm) 100%);
+}
+
+.bg-gradient-subtle {
+  background: linear-gradient(135deg, var(--color-cream) 0%, #ffffff 100%);
+}
+
+input, select, textarea {
+  color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+  input, select, textarea {
+    color: rgb(23, 22, 22);
+  }
+}
