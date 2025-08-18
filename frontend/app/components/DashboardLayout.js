@@ -77,9 +77,9 @@ export default function DashboardLayout({ children }) {
   return (
     <div className="min-h-screen bg-brand-cream">
       {/* Mobile sidebar */}
-      <div className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
+      <div className={`fixed inset-0 z-50 overflow-y-auto lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
         <div className="fixed inset-0 bg-brand-primary bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-        <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white shadow-xl">
+        <div className="relative flex w-2xs flex-1 flex-col bg-white shadow-xl">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
             <button
               type="button"
