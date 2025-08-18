@@ -102,15 +102,15 @@ export default function DashboardLayout({ children }) {
                   href={item.href}
                   className={`group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors ${
                     active 
-                      ? 'bg-brand-secondary text-white shadow-md' 
-                      : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent'
-                  }`}
+                        ? 'bg-brand-highlight text-brand-primary shadow-md' 
+                        : 'text-brand-primary hover:bg-brand-cream hover:text-brand-accent'
+                    }`}
                 >
                   <Icon className={`mr-3 h-5 w-5 ${
                     active 
-                      ? 'text-white' 
-                      : 'text-brand-secondary group-hover:text-brand-accent'
-                  }`} />
+                        ? 'text-brand-secondary' 
+                        : 'text-brand-secondary group-hover:text-brand-accent'
+                    }`} />
                   {item.name}
                 </a>
               );

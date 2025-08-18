@@ -34,16 +34,20 @@ const researchTypeIcons = {
 };
 
 const researchTypeLabels = {
-  seminar: 'Seminars',
-  phd: 'PhD Research',
-  journal: 'Journal Publications',
+  seminar: 'S/C/W/FDP/G',
+  phd: 'PhD',
+  phdguiding: 'PhD Guiding',
+  journal: 'Journals',
   book: 'Books',
-  award: 'Awards',
+  journaledited: 'Journal Edited',
+  researchgrant: ' Research Grants',
   patent: 'Patents',
+  qualification: 'Qualification',
   visit: 'Visits',
+  award: 'Awards',
+  membership: 'Membership',
   consultancy: 'Consultancy',
   infrastructure: 'Infrastructure',
-  grant: 'Grants'
 };
 
 const statusColors = {
@@ -188,7 +192,7 @@ export default function FacultyDashboard() {
         </div>
       )}
 
-      {/* Research Type Selector
+      {/* Research Type Selector */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Research Overview</h2>
         <div className="flex flex-wrap gap-2">
@@ -196,11 +200,11 @@ export default function FacultyDashboard() {
             onClick={() => setSelectedType('all')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               selectedType === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-accent text-white'
+                : 'bg-gray-100 text-brand-primary hover:bg-gray-200'
             }`}
           >
-            All Research
+            Summary
           </button>
           {Object.entries(researchTypeLabels).map(([type, label]) => (
             <button
@@ -208,15 +212,15 @@ export default function FacultyDashboard() {
               onClick={() => setSelectedType(type)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 selectedType === type
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-brand-accent text-white'
+                  : 'bg-gray-100 text-brand-primary hover:bg-gray-200'
               }`}
             >
               {label}
             </button>
           ))}
         </div>
-      </div> */}
+      </div>
 
       {/* Research Data Table */}
       {/* {selectedType !== 'all' && (
