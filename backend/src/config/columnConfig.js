@@ -10,7 +10,8 @@ const columnConfig = {
       { key: 'title', label: 'Patent Title' },
       { key: 'fnum', label: 'File Number' },
       { key: 'date1', label: 'Date' },
-      { key: 'status1', label: 'Status' }
+      { key: 'status1', label: 'Status' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'JOURNALS': {
@@ -28,7 +29,8 @@ const columnConfig = {
       { key: 'impact', label: 'Impact Factor' },
       { key: 'type1', label: 'Type' },
       { key: 'scopus', label: 'Scopus Indexed' },
-      { key: 'pdate', label: 'Publication Date' }
+      { key: 'pdate', label: 'Publication Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'BOOKS': {
@@ -36,11 +38,12 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Book Title' },
+      { key: 'book', label: 'Book Title' },
+      { key: 'type1', label: 'Type' },
       { key: 'publisher', label: 'Publisher' },
-      { key: 'isbn', label: 'ISBN' },
-      { key: 'date', label: 'Publication Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'pub1', label: 'ISBN' },
+      { key: 'sdate', label: 'Publication Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'JOURNAL-EDITED': {
@@ -48,10 +51,13 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Journal Title' },
+      { key: 'journal', label: 'Journal Title' },
+      { key: 'paper', label: 'Paper Title' },
+      { key: 'type1', label: 'Type of Work' },
       { key: 'publisher', label: 'Publisher' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'sdate', label: 'Date' },
+      { key: 'pub1', label: 'Journal Details' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'QUALIFICATIONS': {
@@ -59,10 +65,12 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'degree', label: 'Degree' },
-      { key: 'institution', label: 'Institution' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'impro', label: 'Improved Qualification' },
+      { key: 'special', label: 'Improved Specification' },
+      { key: 'type1', label: 'Institute Type' },
+      { key: 'name', label: 'Institution' },
+      { key: 'date1', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'AWARDS': {
@@ -70,10 +78,13 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Award Title' },
-      { key: 'organization', label: 'Organization' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'award', label: 'Award Title' },
+      { key: 'type1', label: 'Award Type' },
+      { key: 'type2', label: 'Agency Type' },
+      { key: 'agency', label: 'Agency Name' },
+      { key: 'ifany', label: 'Event Details' },
+      { key: 'date2', label: 'Award Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'MEMBERSHIP': {
@@ -81,10 +92,11 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'organization', label: 'Organization' },
-      { key: 'position', label: 'Position' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'member', label: 'Membership Title' },
+      { key: 'body', label: 'Body Name' },
+      { key: 'date2', label: 'Appointment Date' },
+      { key: 'term', label: 'Term' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'CONSULTANCY': {
@@ -92,11 +104,11 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Project Title' },
-      { key: 'organization', label: 'Organization' },
+      { key: 'work', label: 'Nature of Work' },
+      { key: 'agency', label: 'Agency Name' },
       { key: 'amount', label: 'Amount' },
       { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'INFRASTRUCTURE': {
@@ -104,11 +116,12 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Infrastructure Title' },
-      { key: 'description', label: 'Description' },
-      { key: 'amount', label: 'Amount' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'title', label: 'Equipment Name' },
+      { key: 'title1', label: 'Nature of Equipment' },
+      { key: 'comment', label: 'Description' },
+      { key: 'title2', label: 'Amount' },
+      { key: 'date2', label: 'Purchase Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'PHD': {
@@ -119,20 +132,21 @@ const columnConfig = {
       { key: 'special', label: 'Specialization' },
       { key: 'guide', label: 'Guide Name' },
       { key: 'college', label: 'Guide College' },
-      { key: 'dept', label: 'Department' },
+      { key: 'dept', label: 'Guide Department' },
       { key: 'statuss', label: 'Type' },
-      { key: 'sdate', label: 'Date' }
+      { key: 'sdate', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'PHD-GUIDING': {
     columns: [
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
-      { key: 'department', label: 'Department' },
-      { key: 'student', label: 'Student Name' },
-      { key: 'title', label: 'Thesis Title' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'university', label: 'University' },
+      { key: 'special', label: 'Specialization' },
+      { key: 'name', label: 'Scholar Name' },
+      { key: 'sdate', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'VISITS': {
@@ -140,10 +154,14 @@ const columnConfig = {
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
-      { key: 'title', label: 'Visit Title' },
-      { key: 'organization', label: 'Organization' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'type1', label: 'Type' },
+      { key: 'place', label: 'Place' },
+      { key: 'purpose', label: 'Purpose' },
+      { key: 'agency', label: 'Funding Agency' },
+      { key: 'amount', label: 'Amount%' },
+      { key: 'date1', label: 'Starting Date' },
+      { key: 'date2', label: 'Ending Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'S/C/W/FDP/G': {
@@ -159,7 +177,8 @@ const columnConfig = {
       { key: 'agency', label: 'Agency' },
       { key: 'date1', label: 'Start Date' },
       { key: 'date2', label: 'End Date' },
-      { key: 'comment', label: 'Comments' }
+      { key: 'comment', label: 'Comments' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'RESEARCH-GRANTS': {
@@ -168,10 +187,15 @@ const columnConfig = {
       { key: 'employee', label: 'Employee Name' },
       { key: 'department', label: 'Department' },
       { key: 'title', label: 'Project Title' },
-      { key: 'agency', label: 'Funding Agency' },
+      { key: 'duration', label: 'Duration' },
+      { key: 'agency', label: 'Agency' },
+      { key: 'letter', label: 'Letter Number' },
       { key: 'amount', label: 'Amount' },
-      { key: 'date', label: 'Date' },
-      { key: 'type', label: 'Type' }
+      { key: 'date1', label: 'Date' },
+      { key: 'type1', label: 'Project Status' },
+      { key: 'type2', label: 'Project Type' },
+      { key: 'comment', label: 'Research Details' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'SUMMARY': {
