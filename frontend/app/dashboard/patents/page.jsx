@@ -5,6 +5,7 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import Link from 'next/link';
 import { FileSearch, Upload, Calendar, Hash, FileText, Award, X, FileIcon } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function PatentsPage() {
   const {user, token} = useAuth();
@@ -99,13 +100,13 @@ export default function PatentsPage() {
       console.log('Submission successful:', result);
       
       // Show success message to user
-      alert('Patent details submitted successfully!');
+      toast.success('Patent details submitted successfully!');
 
       // Reset form after successful submission
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -287,7 +288,7 @@ export default function PatentsPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

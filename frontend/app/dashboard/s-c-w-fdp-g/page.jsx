@@ -115,13 +115,13 @@ export default function S_c_w_fdp_gPage() {
       console.log('Submission successful:', result);
       
       // Show success message to user
-      alert('s-c-w-fdp-g details submitted successfully!');
+      toast.success('s-c-w-fdp-g details submitted successfully!');
 
       // Reset form after successful submission
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -422,7 +422,7 @@ export default function S_c_w_fdp_gPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

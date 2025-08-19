@@ -144,7 +144,7 @@ export default function ReportViewPage() {
       a.click();
       a.remove();
     } catch (err) {
-      alert(`Download error: ${err.message}`);
+      toast.error(`Download error: ${err.message}`);
     }
   };
 
@@ -216,8 +216,8 @@ export default function ReportViewPage() {
       </div>
 
       {tableColumns.length > 0 && displayData.length > 0 && (
-        <div className="overflow-x-auto rounded-lg border border-brand-cream">
-          <table className="min-w-full bg-white">
+        <div className="overflow-x-auto rounded-lg border border-brand-primary">
+          <table className="min-w-full bg-white border-separate">
             <thead>
               <tr className="bg-gradient-subtle">
                 {tableColumns.map(column => (

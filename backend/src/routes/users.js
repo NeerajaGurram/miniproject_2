@@ -131,7 +131,7 @@ router.get('/stats/overview', auth, authorize('admin'), async (req, res) => {
     const activeUsers = await User.countDocuments({ isActive: true });
     const facultyCount = await User.countDocuments({ role: 'faculty' });
     const adminCount = await User.countDocuments({ role: 'admin' });
-    const hodCount = await User.countDocuments({ role: 'hod' });
+    const hodCount = await User.countDocuments({ role: 'incharge' });
 
     // Get users by branch
     const branchStats = await User.aggregate([

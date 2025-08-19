@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { FileText, Upload, Calendar, FileIcon, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function InfrastructurePage() {
   const {user, token} = useAuth(); 
@@ -97,11 +98,11 @@ export default function InfrastructurePage() {
 
       const result = await response.json();
       console.log('Submission successful:', result);
-      alert('Infrastructure details submitted successfully!');
+      toast.success('Infrastructure details submitted successfully!');
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -291,7 +292,7 @@ export default function InfrastructurePage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

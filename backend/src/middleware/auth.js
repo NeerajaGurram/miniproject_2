@@ -68,7 +68,7 @@ const authorize = (...roles) => {
   };
 };
 
-// Faculty can only access their own data unless they're admin/HOD
+// Faculty can only access their own data unless they're admin/Incharge
 const authorizeFaculty = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ 
@@ -76,8 +76,8 @@ const authorizeFaculty = (req, res, next) => {
     });
   }
 
-  // Admin and HOD can access all data
-  if (req.user.role === 'admin' || req.user.role === 'hod') {
+  // Admin and Incharge can access all data
+  if (req.user.role === 'admin' || req.user.role === 'incharge') {
     return next();
   }
 
@@ -114,8 +114,8 @@ const canModifyResearch = async (req, res, next) => {
       });
     }
 
-    // Admin and HOD can modify any research
-    if (req.user.role === 'admin' || req.user.role === 'hod') {
+    // Admin and Incharge can modify any research
+    if (req.user.role === 'admin' || req.user.role === 'incharge') {
       req.research = research;
       return next();
     }

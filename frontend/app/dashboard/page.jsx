@@ -27,10 +27,10 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Role-based Dashboard */}
         {user?.role === 'faculty' && <FacultyDashboard />}
-        {(user?.role === 'admin' || user?.role === 'hod') && <DepartmentOverview />}
+        {(user?.role === 'admin' || user?.role === 'incharge') && <DepartmentOverview />}
         
         {/* Fallback for other roles */}
-        {!['faculty', 'admin', 'hod'].includes(user?.role) && (
+        {!['faculty', 'admin', 'incharge'].includes(user?.role) && (
           <>
             {/* Welcome Section */}
             <div className="bg-white rounded-lg shadow-lg p-6 border border-brand-cream">

@@ -10,7 +10,8 @@ export const columnConfig = {
       { key: 'title', label: 'Patent Title' },
       { key: 'fnum', label: 'File Number' },
       { key: 'date1', label: 'Date' },
-      { key: 'status1', label: 'Status' }
+      { key: 'status1', label: 'Status' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'JOURNALS': {
@@ -28,7 +29,8 @@ export const columnConfig = {
       { key: 'impact', label: 'Impact Factor' },
       { key: 'type1', label: 'Type' },
       { key: 'scopus', label: 'Scopus Indexed' },
-      { key: 'pdate', label: 'Publication Date' }
+      { key: 'pdate', label: 'Publication Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'BOOKS': {
@@ -41,6 +43,7 @@ export const columnConfig = {
       { key: 'publisher', label: 'Publisher' },
       { key: 'pub1', label: 'ISBN' },
       { key: 'sdate', label: 'Publication Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'JOURNAL-EDITED': {
@@ -54,6 +57,7 @@ export const columnConfig = {
       { key: 'publisher', label: 'Publisher' },
       { key: 'sdate', label: 'Date' },
       { key: 'pub1', label: 'Journal Details' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'QUALIFICATIONS': {
@@ -66,6 +70,7 @@ export const columnConfig = {
       { key: 'type1', label: 'Institute Type' },
       { key: 'name', label: 'Institution' },
       { key: 'date1', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'AWARDS': {
@@ -79,6 +84,7 @@ export const columnConfig = {
       { key: 'agency', label: 'Agency Name' },
       { key: 'ifany', label: 'Event Details' },
       { key: 'date2', label: 'Award Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'MEMBERSHIP': {
@@ -90,6 +96,7 @@ export const columnConfig = {
       { key: 'body', label: 'Body Name' },
       { key: 'date2', label: 'Appointment Date' },
       { key: 'term', label: 'Term' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'CONSULTANCY': {
@@ -101,6 +108,7 @@ export const columnConfig = {
       { key: 'agency', label: 'Agency Name' },
       { key: 'amount', label: 'Amount' },
       { key: 'date', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'INFRASTRUCTURE': {
@@ -113,6 +121,7 @@ export const columnConfig = {
       { key: 'comment', label: 'Description' },
       { key: 'title2', label: 'Amount' },
       { key: 'date2', label: 'Purchase Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'PHD': {
@@ -125,7 +134,8 @@ export const columnConfig = {
       { key: 'college', label: 'Guide College' },
       { key: 'dept', label: 'Guide Department' },
       { key: 'statuss', label: 'Type' },
-      { key: 'sdate', label: 'Date' }
+      { key: 'sdate', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'PHD-GUIDING': {
@@ -136,6 +146,7 @@ export const columnConfig = {
       { key: 'special', label: 'Specialization' },
       { key: 'name', label: 'Scholar Name' },
       { key: 'sdate', label: 'Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'VISITS': {
@@ -150,6 +161,7 @@ export const columnConfig = {
       { key: 'amount', label: 'Amount%' },
       { key: 'date1', label: 'Starting Date' },
       { key: 'date2', label: 'Ending Date' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'S/C/W/FDP/G': {
@@ -165,7 +177,8 @@ export const columnConfig = {
       { key: 'agency', label: 'Agency' },
       { key: 'date1', label: 'Start Date' },
       { key: 'date2', label: 'End Date' },
-      { key: 'comment', label: 'Comments' }
+      { key: 'comment', label: 'Comments' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'RESEARCH-GRANTS': {
@@ -181,7 +194,8 @@ export const columnConfig = {
       { key: 'date1', label: 'Date' },
       { key: 'type1', label: 'Project Status' },
       { key: 'type2', label: 'Project Type' },
-      { key: 'comment', label: 'Research Details' }
+      { key: 'comment', label: 'Research Details' },
+      { key: 'status', label: 'Approval Status' }
     ]
   },
   'SUMMARY': {

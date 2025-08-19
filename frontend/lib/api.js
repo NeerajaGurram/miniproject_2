@@ -67,7 +67,7 @@ export const researchAPI = {
   // Statistics
   getStats: (params) => api.get('/research/stats/overview', { params }),
   
-  // Pending research (admin/HOD)
+  // Pending research (admin/Incharge)
   getPending: (params) => api.get('/research/pending/all', { params }),
   
   // Attachments

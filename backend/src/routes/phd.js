@@ -23,6 +23,21 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }
 });
 
+function getAcademicYear() {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // January is 0, so add 1
+  
+  // If current date is between June 1st (month 6) and May 31st (month 5 next year)
+  if (currentMonth >= 6) {
+    // June to December: current year to next year (e.g., 2025-26)
+    return `${currentYear}-${(currentYear + 1).toString().slice(-2)}`;
+  } else {
+    // January to May: previous year to current year (e.g., 2024-25)
+    return `${currentYear - 1}-${currentYear.toString().slice(-2)}`;
+  }
+}
+
 router.post('/', auth, upload.single('file'), async (req, res) => {
   try {
     const { uni, spe, guide, guidec, guided, type1, date1 } = req.body;
@@ -41,6 +56,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     const uploadStream = bucket.openUploadStream(`${req.user.empId}_${Date.now()}_${req.file.originalname}`);
     uploadStream.end(req.file.buffer);
 
+    const academic_year = getAcademicYear();
     uploadStream.on('finish', async (file) => {
       const phdRecord = new Phd({
         empId: req.user.empId,
@@ -51,7 +67,8 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         dept: guided,
         statuss: type1,
         sdate: new Date(date1),
-        path: uploadStream.filename
+        path: uploadStream.filename,
+        academic_year
       });
 
       await phdRecord.save();

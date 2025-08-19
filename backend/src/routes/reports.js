@@ -119,6 +119,7 @@ router.get('/debug/:type', auth, async (req, res) => {
 router.get('/data', auth, async (req, res) => {
   try {
     const { type, year, branch } = req.query;
+    console.log("year:", year);
     
     // Get department from user or query
     let department = branch;
@@ -180,42 +181,54 @@ router.get('/data', auth, async (req, res) => {
     }
 
     // Add year filter if specified
+    // Add academic_year filter if specified
     if (year && year !== 'ALL') {
-      const [startYear, endYear] = year.split('-');
-      
-      // Validate year values
-      if (!startYear || !endYear || isNaN(startYear) || isNaN(endYear)) {
+      // Validate academic year format (e.g., "2023-24")
+      if (!/^\d{4}-\d{2}$/.test(year)) {
         return res.status(400).json({ error: 'Invalid academic year format. Use format like "2023-24" (July 2023 to June 2024)' });
       }
       
-      // Handle academic year: 2017-18 means July 2017 to June 2018
-      const startDate = new Date(`${startYear}-07-01`); // July 1st of start year
-      const endDate = new Date(`${endYear}-06-30`);     // June 30th of end year
+      // Use academic_year field for filtering
+      query.academic_year = year;
       
-      console.log(`Academic year ${year}: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-      
-      // Validate that dates are valid
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid year range' });
-      }
-      
-      // Handle different date field names in different models
-      const dateFields = ['date', 'date1', 'date2', 'issuedate', 'pdate'];
-      const dateQuery = {
-        $or: dateFields.map(field => ({
-          [field]: { 
-            $gte: startDate, 
-            $lte: endDate,
-            $ne: null,  // Exclude null values
-            $exists: true  // Field must exist
-          }
-        }))
-      };
-      query.$or = dateQuery.$or;
+      console.log(`Filtering by academic year: ${year}`);
     }
+    // if (year && year !== 'ALL') {
+    //   const [startYear, endYear] = year.split('-');
+      
+    //   // Validate year values
+    //   if (!startYear || !endYear || isNaN(startYear) || isNaN(endYear)) {
+    //     return res.status(400).json({ error: 'Invalid academic year format. Use format like "2023-24" (July 2023 to June 2024)' });
+    //   }
+      
+    //   // Handle academic year: 2017-18 means July 2017 to June 2018
+    //   const startDate = new Date(`${startYear}-07-01`); // July 1st of start year
+    //   const endDate = new Date(`${endYear}-06-30`);     // June 30th of end year
+      
+    //   console.log(`Academic year ${year}: ${startDate.toISOString()} to ${endDate.toISOString()}`);
+      
+    //   // Validate that dates are valid
+    //   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    //     return res.status(400).json({ error: 'Invalid year range' });
+    //   }
+      
+    //   // Handle different date field names in different models
+    //   const dateFields = ['date', 'date1', 'date2', 'issuedate', 'pdate'];
+    //   const dateQuery = {
+    //     $or: dateFields.map(field => ({
+    //       [field]: { 
+    //         $gte: startDate, 
+    //         $lte: endDate,
+    //         $ne: null,  // Exclude null values
+    //         $exists: true  // Field must exist
+    //       }
+    //     }))
+    //   };
+    //   query.$or = dateQuery.$or;
+    // }
 
-    // Add department filter if user is HOD/admin
-    // if (department && ['hod', 'admin'].includes(req.user.role)) {
+    // Add department filter if user is Incharge/admin
+    // if (department && ['incharge', 'admin'].includes(req.user.role)) {
     if (department) {
       // Get faculty empIds in this department
       const facultyUsers = await User.find({ 
@@ -539,8 +552,8 @@ async function handleSummaryReport(res, year, department, excelFormat) {
 //   }
 // });
 
-// // Get department reports (admin/HOD only)
-// router.get('/department/:department', auth, authorize('admin', 'hod'), async (req, res) => {
+// // Get department reports (admin/Incharge only)
+// router.get('/department/:department', auth, authorize('admin', 'incharge'), async (req, res) => {
 //   try {
 //     const { department } = req.params;
 //     const { page = 1, limit = 10, year } = req.query;
@@ -582,8 +595,8 @@ async function handleSummaryReport(res, year, department, excelFormat) {
 //   }
 // });
 
-// // Get summary reports (admin/HOD only)
-// router.get('/summary', auth, authorize('admin', 'hod'), async (req, res) => {
+// // Get summary reports (admin/Incharge only)
+// router.get('/summary', auth, authorize('admin', 'incharge'), async (req, res) => {
 //   try {
 //     const { year = new Date().getFullYear(), department } = req.query;
 
@@ -696,8 +709,8 @@ async function handleSummaryReport(res, year, department, excelFormat) {
 //   }
 // });
 
-// // Approve report (admin/HOD only)
-// router.put('/:id/approve', auth, authorize('admin', 'hod'), async (req, res) => {
+// // Approve report (admin/Incharge only)
+// router.put('/:id/approve', auth, authorize('admin', 'incharge'), async (req, res) => {
 //   try {
 //     const { status, comments } = req.body;
 

@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import React, { use, useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { BookOpen, Upload, Calendar, Building, FileText, Type, FileIcon, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function BooksPage() {
   const {user, token} = useAuth(); 
@@ -100,10 +101,10 @@ export default function BooksPage() {
     }
 
     const result = await response.json();
-    alert('Book submitted successfully!');
+    toast.success('Book submitted successfully!');
     handleReset();
   } catch (error) {
-    alert(`Error: ${error.message}`);
+    toast.error(`Error: ${error.message}`);
   } finally {
     setLoading(false);
   }
@@ -306,7 +307,7 @@ export default function BooksPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

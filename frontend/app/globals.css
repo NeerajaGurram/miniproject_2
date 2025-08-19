@@ -82,7 +82,7 @@ body {
 }
 
 .bg-gradient-subtle {
-  background: linear-gradient(135deg, var(--color-cream) 0%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--color-cream) 0%, #f2eeee 100%);
 }
 
 input, select, textarea {

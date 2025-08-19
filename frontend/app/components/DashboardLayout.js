@@ -109,7 +109,7 @@ export default function DashboardLayout({ children }) {
                   <Icon className={`mr-3 h-5 w-5 ${
                     active 
                         ? 'text-brand-secondary' 
-                        : 'text-brand-secondary group-hover:text-brand-accent hover:bg-gray-200'
+                        : 'text-brand-secondary group-hover:text-brand-accent'
                     }`} />
                   {item.name}
                 </a>

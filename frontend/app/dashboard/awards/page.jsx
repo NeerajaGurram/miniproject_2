@@ -5,6 +5,7 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { sub } from 'date-fns';
 import { Award, Upload, Calendar, Building, FileText, Star, Users, FileIcon, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function AwardsPage() {
   const {user, token} = useAuth(); 
@@ -105,13 +106,14 @@ export default function AwardsPage() {
         console.log('Submission successful:', result);
         
         // Show success message to user
-        alert('Award details submitted successfully!');
+        // alert('Award details submitted successfully!');
+        toast.success('Award details submitted successfully!');
 
         // Reset form after successful submission
         handleReset();
       } catch (error) {
         console.error('Submission error:', error);
-        alert(`Error: ${error.message}`);
+        toast.error(`Error: ${error.message}`);
       } finally {
         setLoading(false);
       }
@@ -145,9 +147,9 @@ export default function AwardsPage() {
         <div className="bg-gradient-brand p-6 text-center">
           <div className="flex items-center justify-center mb-2">
             <Award className="h-8 w-8 text-white mr-3" />
-            <h2 className="text-2xl font-bold text-white">Awards & Recognition</h2>
+            <h2 className="text-2xl font-bold text-white">Awards</h2>
           </div>
-          <p className="text-brand-cream text-sm">Submit your awards and recognition details</p>
+          <p className="text-brand-cream text-sm">Submit your awards details</p>
         </div>
 
         <div className="space-y-6 p-6">
@@ -335,7 +337,7 @@ export default function AwardsPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

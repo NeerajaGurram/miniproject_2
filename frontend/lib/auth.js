@@ -155,7 +155,7 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user && !!token;
   const isAdmin = user?.role === 'admin';
-  const isHOD = user?.role === 'hod';
+  const isHOD = user?.role === 'incharge';
   const isFaculty = user?.role === 'faculty';
   const canManageUsers = isAdmin;
   const canApproveResearch = isAdmin || isHOD;

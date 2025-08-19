@@ -32,8 +32,12 @@ const AwardSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['0', '1'],
-        default: '1'
+        enum: ['-1','0', '1'],
+        default: '0'
+    },
+    academic_year: {
+        type: String,
+        maxlength: 1000
     },
     path: {
         type: String,

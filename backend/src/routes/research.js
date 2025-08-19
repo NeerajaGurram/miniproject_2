@@ -226,8 +226,8 @@ router.delete('/:id', auth, canModifyResearch, async (req, res) => {
   }
 });
 
-// Approve/Reject research entry (admin/HOD only)
-router.put('/:id/status', auth, authorize('admin', 'hod'), async (req, res) => {
+// Approve/Reject research entry (admin/Incharge only)
+router.put('/:id/status', auth, authorize('admin', 'incharge'), async (req, res) => {
   try {
     const { status, rejectionReason } = req.body;
 
@@ -315,8 +315,8 @@ router.get('/stats/overview', auth, async (req, res) => {
   }
 });
 
-// Get pending research entries (admin/HOD only)
-router.get('/pending/all', auth, authorize('admin', 'hod'), async (req, res) => {
+// Get pending research entries (admin/Incharge only)
+router.get('/pending/all', auth, authorize('admin', 'incharge'), async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 

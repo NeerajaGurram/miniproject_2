@@ -3,6 +3,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { Users, Upload, Calendar, FileIcon, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function MembershipPage() {
   const {user, token} = useAuth();
@@ -95,11 +96,11 @@ export default function MembershipPage() {
 
       const result = await response.json();
       console.log('Submission successful:', result);
-      alert('Membership details submitted successfully!');
+      toast.success('Membership details submitted successfully!');
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -269,7 +270,7 @@ export default function MembershipPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

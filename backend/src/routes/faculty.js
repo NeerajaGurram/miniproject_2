@@ -88,8 +88,8 @@ router.get('/research/:type', auth, async (req, res) => {
   }
 });
 
-// Get department overview (for HOD/Admin)
-router.get('/department/:department', auth, authorize(['admin', 'hod']), async (req, res) => {
+// Get department overview (for Incharge/Admin)
+router.get('/department/:department', auth, authorize(['admin', 'incharge']), async (req, res) => {
   try {
     const { department } = req.params;
     const { year } = req.query;

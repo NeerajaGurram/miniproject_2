@@ -108,11 +108,11 @@ export default function VisitsPage() {
 
       const result = await response.json();
       console.log('Submission successful:', result);
-      alert('Visit details submitted successfully!');
+      toast.success('Visit details submitted successfully!');
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -346,7 +346,7 @@ export default function VisitsPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}

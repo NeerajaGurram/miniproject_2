@@ -4,6 +4,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { FileText, Upload, Calendar, Building, Award, DollarSign, Clock, Hash, FileIcon, X, TrendingUp } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function ResearchGrantsPage() {
   const {user, token} = useAuth();
@@ -114,13 +115,13 @@ export default function ResearchGrantsPage() {
       console.log('Submission successful:', result);
       
       // Show success message to user
-      alert('Research Grant details submitted successfully!');
+      toast.success('Research Grant details submitted successfully!');
 
       // Reset form after successful submission
       handleReset();
     } catch (error) {
       console.error('Submission error:', error);
-      alert(`Error: ${error.message}`);
+      toast.error(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -413,7 +414,7 @@ export default function ResearchGrantsPage() {
                       if (files[0].type === 'application/pdf') {
                         handleFileChange({ target: { files } }); // Reuse your existing handler
                       } else {
-                        alert('Please upload only PDF files');
+                        toast.error('Please upload only PDF files');
                       }
                     }
                   }}
