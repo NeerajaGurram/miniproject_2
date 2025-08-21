@@ -1,5 +1,6 @@
 'use client';
 import DashboardLayout from '../../components/DashboardLayout';
+import toast from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { BookOpen, Upload, Calendar, Hash, FileText, User, Award, Globe, FileIcon, X } from 'lucide-react';

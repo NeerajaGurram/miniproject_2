@@ -123,7 +123,8 @@ router.get('/data', auth, async (req, res) => {
     
     // Get department from user or query
     let department = branch;
-    if (!department && req.user.department) {
+    if (!department && req.user.department && req.user.role !== 'admin') {
+      // Only set default department for non-admin users
       department = req.user.department;
     }
 
@@ -193,44 +194,11 @@ router.get('/data', auth, async (req, res) => {
       
       console.log(`Filtering by academic year: ${year}`);
     }
-    // if (year && year !== 'ALL') {
-    //   const [startYear, endYear] = year.split('-');
-      
-    //   // Validate year values
-    //   if (!startYear || !endYear || isNaN(startYear) || isNaN(endYear)) {
-    //     return res.status(400).json({ error: 'Invalid academic year format. Use format like "2023-24" (July 2023 to June 2024)' });
-    //   }
-      
-    //   // Handle academic year: 2017-18 means July 2017 to June 2018
-    //   const startDate = new Date(`${startYear}-07-01`); // July 1st of start year
-    //   const endDate = new Date(`${endYear}-06-30`);     // June 30th of end year
-      
-    //   console.log(`Academic year ${year}: ${startDate.toISOString()} to ${endDate.toISOString()}`);
-      
-    //   // Validate that dates are valid
-    //   if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    //     return res.status(400).json({ error: 'Invalid year range' });
-    //   }
-      
-    //   // Handle different date field names in different models
-    //   const dateFields = ['date', 'date1', 'date2', 'issuedate', 'pdate'];
-    //   const dateQuery = {
-    //     $or: dateFields.map(field => ({
-    //       [field]: { 
-    //         $gte: startDate, 
-    //         $lte: endDate,
-    //         $ne: null,  // Exclude null values
-    //         $exists: true  // Field must exist
-    //       }
-    //     }))
-    //   };
-    //   query.$or = dateQuery.$or;
-    // }
 
     // Add department filter if user is Incharge/admin
-    // if (department && ['incharge', 'admin'].includes(req.user.role)) {
-    if (department) {
-      // Get faculty empIds in this department
+    // Update the department filter logic
+    if (department && department !== '' && ['incharge', 'admin'].includes(req.user.role)) {
+      // Get faculty empIds in this specific department
       const facultyUsers = await User.find({ 
         department, 
         role: 'faculty'
@@ -238,9 +206,15 @@ router.get('/data', auth, async (req, res) => {
       
       const facultyEmpIds = facultyUsers.map(f => f.empId);
       query.empId = { $in: facultyEmpIds };
+      console.log(`Filtering by department: ${department}`);
     } else if (req.user.role === 'faculty') {
       // Faculty can only see their own data
       query.empId = req.user.empId;
+      console.log('Faculty viewing own data only');
+    } else if (['incharge', 'admin'].includes(req.user.role) && (!department || department === '')) {
+      // Admin/Incharge with no department selected - show ALL data (no department filter)
+      console.log('Showing data for ALL branches (no department filter)');
+      // No empId filtering needed - will show all faculty data
     }
 
     // Get data
@@ -347,7 +321,12 @@ async function handleSummaryReport(res, year, department, excelFormat) {
   try {
     // Get faculty in department
     const facultyQuery = { role: 'faculty' };
-    if (department) facultyQuery.department = department;
+    if (department && department !== '') {
+      facultyQuery.department = department;
+      console.log(`Filtering summary by department: ${department}`);
+    } else {
+      console.log('Showing summary for ALL departments');
+    }
     
     const faculty = await User.find(facultyQuery).select('empId name department');
     const facultyEmpIds = faculty.map(f => f.empId);
@@ -462,6 +441,34 @@ async function handleSummaryReport(res, year, department, excelFormat) {
     throw error;
   }
 }
+
+router.get('/academic-years', auth, async (req, res) => {
+  try {
+    const models = [
+      Seminar, Phd, PhdGuiding, Journal, Book, JournalEdited,
+      ResearchGrant, Patent, Qualification, Visit, Award,
+      Membership, Consultancy, Infrastructure
+    ];
+
+    const yearsSet = new Set();
+
+    for (const Model of models) {
+      const records = await Model.find({ academic_year: { $exists: true } }).select('academic_year');
+      records.forEach(r => {
+        if (r.academic_year) {
+          yearsSet.add(r.academic_year);
+        }
+      });
+    }
+
+    const uniqueYears = Array.from(yearsSet).sort(); // Optional: sort years
+    res.json(uniqueYears);
+  } catch (err) {
+    console.error('Error fetching academic years:', err);
+    res.status(500).json({ error: 'Failed to fetch academic years' });
+  }
+});
+
 
 // // Generate automatic report
 // router.post('/generate', auth, validateReport, async (req, res) => {

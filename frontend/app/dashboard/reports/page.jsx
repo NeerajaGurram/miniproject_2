@@ -1,5 +1,6 @@
 'use client';
 import DashboardLayout from '../../components/DashboardLayout';
+import toast from 'react-hot-toast';
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
@@ -20,7 +21,7 @@ export default function ReportsPage() {
     if (user && user.department) {
       setFormData(prev => ({
         ...prev,
-        branch: user.department
+        branch: user.role === 'admin' ? '' : user.department
       }));
     }
   }, [user]);
@@ -36,11 +37,25 @@ export default function ReportsPage() {
     'CE': 'Civil Engineering'
   };
 
-  const yearOptions = [
-    '2017-18', '2018-19', '2019-20', '2020-21', 
-    '2021-22', '2022-23', '2023-24', '2024-25',
-    '2025-26', '2026-27', '2027-28', '2028-29', '2029-30'
-  ];
+  const [yearOptions, setYearOptions] = useState([]);
+
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/academic-years`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const years = await response.json();
+        setYearOptions(years);
+      } catch (err) {
+        console.error('Failed to load academic years:', err);
+      }
+    };
+
+    if (token) {
+      fetchYears();
+    }
+  }, [token]);
 
   const reportTypes = [
     'S/C/W/FDP/G', 'PHD', 'PHD-GUIDING', 'JOURNALS',
@@ -63,9 +78,9 @@ export default function ReportsPage() {
     if (!formData.type1) {
       newErrors.type1 = "Please select a report type";
     }
-    if (!formData.branch) {
-      newErrors.branch = "Please select a branch";
-    }
+    // if (!formData.branch) {
+    //   newErrors.branch = "Please select a branch";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -83,7 +98,7 @@ export default function ReportsPage() {
     setFormData({
       type1: '',
       type11: '',
-      branch: user?.department || ''
+      branch: user.role === 'admin' ? '' : user.department
     });
     setErrors({});
   };
@@ -147,19 +162,21 @@ export default function ReportsPage() {
           </div>
 
           {/* Branch */}
-          <div>
-            <label className="block text-sm font-medium text-brand-primary mb-2">
-              Branch <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
+          {user?.role === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-2">
+                Branch <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
               <select
                 name="branch"
-                required
+                // required
                 value={formData.branch}
                 onChange={handleChange}
                 className="w-full p-3 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition-colors bg-white text-gray-900"
               >
-                <option value="">Select Branch</option>
+                {/* <option value="">Select Branch</option> */}
+                <option value="">All Branches</option>
                 {Object.entries(branchOptions).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
                 ))}
@@ -167,6 +184,7 @@ export default function ReportsPage() {
             </div>
             {errors.branch && <p className="text-red-500 text-sm mt-1">{errors.branch}</p>}
           </div>
+          )}
 
           {/* Buttons */}
           <div className="flex justify-center space-x-4 pt-6">

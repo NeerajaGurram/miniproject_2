@@ -37,8 +37,8 @@ const PhdSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['-1','0', '1'],
-        default: '0'
+        enum: ['Rejected','Pending', 'Accepted'],
+        default: 'Pending'
     },
     academic_year: {
         type: String,

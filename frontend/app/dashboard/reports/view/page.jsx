@@ -76,7 +76,7 @@ const getTableColumns = (data, type) => {
 
 export default function ReportViewPage() {
   const searchParams = useSearchParams();
-  const { token } = useAuth();
+  const { user, token } = useAuth();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -85,6 +85,45 @@ export default function ReportViewPage() {
   const year = searchParams.get('year');
   const branch = searchParams.get('branch');
   const tableColumns = getTableColumns(data, type);
+
+  const [filters, setFilters] = useState({
+    status: '',
+    year: year || '',
+    branch: branch || '',
+    employee: '',
+    fromDate: '',
+    toDate: ''
+  });
+
+  const [yearOptions, setYearOptions] = useState([]);
+  
+  useEffect(() => {
+      const fetchYears = async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/academic-years`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const years = await response.json();
+          setYearOptions(years);
+        } catch (err) {
+          console.error('Failed to load academic years:', err);
+        }
+      };
+  
+      if (token) {
+        fetchYears();
+      }
+    }, [token]);
+
+  const branchOptions = {
+    'CSE': 'Computer Science Engineering',
+    'IT': 'Information Technology Engineering',
+    'ECE': 'Electronics and Communication Engineering',
+    'EEE': 'Electrical and Electronics Engineering',
+    'EIE': 'Electrical and Instrumentation Engineering',
+    'ME': 'Mechanical Engineering',
+    'CE': 'Civil Engineering'
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -162,6 +201,35 @@ export default function ReportViewPage() {
   );
 
   const displayData = type === 'SUMMARY' ? (data.data || []) : data;
+  let filteredData = displayData.filter(item => {
+    let match = true;
+
+    if (filters.status) {
+      match = match && (String(item.status) === filters.status);
+    }
+    if (filters.year) {
+      match = match && (item.academic_year === filters.year);
+    }
+    if (filters.branch) {
+      match = match && (item.department === filters.branch);
+    }
+    if (filters.employee) {
+      const search = filters.employee.toLowerCase();
+      match = match && (
+        (item.employee && item.employee.toLowerCase().includes(search)) ||
+        (item.empId && String(item.empId).toLowerCase().includes(search))
+      );
+    }
+    if (filters.fromDate && item.date) {
+      match = match && new Date(item.date) >= new Date(filters.fromDate);
+    }
+    if (filters.toDate && item.date) {
+      match = match && new Date(item.date) <= new Date(filters.toDate);
+    }
+
+    return match;
+  });
+
   const isSummary = type === 'SUMMARY';
 
   return (
@@ -209,6 +277,111 @@ export default function ReportViewPage() {
         </div>
       )}
 
+      <div className="mb-6 p-4 bg-gradient-subtle rounded-lg border border-brand-cream">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-brand-primary mb-1">Status</label>
+            <select
+              value={filters.status}
+              onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full p-2 border rounded-lg"
+            >
+              <option value="">All</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
+
+          {/* Year Filter */}
+          <div>
+            <label className="block text-sm font-medium text-brand-primary mb-1">Academic Year</label>
+            <select
+              value={filters.year}
+              onChange={(e) => setFilters(prev => ({ ...prev, year: e.target.value }))}
+              className="w-full p-2 border rounded-lg"
+            >
+              <option value="">All Years</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Branch Filter (only for admin/incharge) */}
+          {branch === '' && user?.role === 'admin' && (
+            <div>
+              <label className="block text-sm font-medium text-brand-primary mb-1">Branch</label>
+              <select
+                value={filters.branch}
+                onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
+                className="w-full p-2 border rounded-lg"
+              >
+                <option value="">All Branches</option>
+                {Object.entries(branchOptions).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+
+          {/* Search by Employee */}
+          {user?.role === 'admin' && (
+          <div>
+            <label className="block text-sm font-medium text-brand-primary mb-1">Employee</label>
+            <input
+              type="text"
+              placeholder="Search by name or ID"
+              value={filters.employee}
+              onChange={(e) => setFilters(prev => ({ ...prev, employee: e.target.value }))}
+              className="w-full p-2 border rounded-lg"
+            />
+          </div>
+          )}
+        </div>
+
+        {/* Date Range */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label className="block text-sm font-medium text-brand-primary mb-1">From Date</label>
+            <input
+              type="date"
+              value={filters.fromDate}
+              onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
+              className="w-full p-2 border rounded-lg"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-brand-primary mb-1">To Date</label>
+            <input
+              type="date"
+              value={filters.toDate}
+              onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
+              className="w-full p-2 border rounded-lg"
+            />
+          </div>
+        </div> */}
+
+        {/* Apply Filters Button */}
+        <div className="flex justify-end mt-4">
+          <button
+            onClick={() => setFilters({
+            status: '',
+            year: '',
+            branch: '',
+            employee: '',
+            fromDate: '',
+            toDate: ''
+          })}
+            className="px-6 py-2 bg-brand-secondary text-white rounded-lg shadow-md hover:bg-brand-accent"
+          >
+            Remove All Filters
+          </button>
+        </div>
+      </div>
+
       <div className="mb-4">
         <p className="text-brand-primary">
           {displayData.length} record{displayData.length !== 1 ? 's' : ''} found
@@ -221,21 +394,36 @@ export default function ReportViewPage() {
             <thead>
               <tr className="bg-gradient-subtle">
                 {tableColumns.map(column => (
-                  <th key={column.key} className="py-3 px-4 text-left text-sm font-medium text-brand-primary border-b border-brand-cream">
+                  <th key={column.key} className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
                     {column.label}
                   </th>
                 ))}
                 {displayData.some(item => hasUploadedFile(item)) && (
-                  <th className="py-3 px-4 text-left text-sm font-medium text-brand-primary border-b border-brand-cream">VIEW</th>
+                  <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">VIEW</th>
                 )}
               </tr>
             </thead>
             <tbody>
-              {displayData.map((item, index) => (
+              {filteredData.map((item, index) => (
                 <tr key={index} className="hover:bg-gray-50 even:bg-gray-50">
                   {tableColumns.map(column => (
-                    <td key={column.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream">
-                      {renderCell(item[column.key])}
+                    <td key={column.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                      {/* {renderCell(item[column.key])} */}
+                      {column.key === 'status' ? (
+                        <span
+                          className={`px-2 py-1 rounded-full font-semibold text-white ${
+                            renderCell(item[column.key]) === 'Pending'
+                              ? 'bg-amber-400'
+                              : renderCell(item[column.key]) === 'Accepted'
+                              ? 'bg-green-500'
+                              : 'bg-red-500'
+                          }`}
+                        >
+                          {renderCell(item[column.key])}
+                        </span>
+                      ) : (
+                        renderCell(item[column.key])
+                      )}
                     </td>
                   ))}
                   {displayData.some(item => hasUploadedFile(item)) && (

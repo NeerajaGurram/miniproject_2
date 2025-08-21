@@ -43,7 +43,15 @@ const SeminarSchema = new mongoose.Schema({
   },
   date1: { type: Date, required: true }, // Start date
   date2: { type: Date }, // End date
-  status: { type: Number, default: 0 }, // 0 = not verified, 1 = verified
+  status: {
+        type: String,
+        enum: ['Rejected','Pending', 'Accepted'],
+        default: 'Pending'
+    },
+    academic_year: {
+        type: String,
+        maxlength: 1000
+    },
   path: {
         type: String,
         maxlength: 1000
