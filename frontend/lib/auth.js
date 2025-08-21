@@ -155,11 +155,11 @@ export const AuthProvider = ({ children }) => {
 
   const isAuthenticated = !!user && !!token;
   const isAdmin = user?.role === 'admin';
-  const isHOD = user?.role === 'incharge';
+  const isIncharge = user?.role === 'incharge';
   const isFaculty = user?.role === 'faculty';
   const canManageUsers = isAdmin;
-  const canApproveResearch = isAdmin || isHOD;
-  const canViewAllResearch = isAdmin || isHOD;
+  const canApproveResearch = isIncharge;
+  const canViewAllResearch = isAdmin;
 
   const value = {
     user,
@@ -167,7 +167,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated,
     isAdmin,
-    isHOD,
+    isIncharge,
     isFaculty,
     canManageUsers,
     canApproveResearch,

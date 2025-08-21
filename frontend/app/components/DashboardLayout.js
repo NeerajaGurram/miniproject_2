@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../../lib/auth';
+import Image from 'next/image';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Menu,
@@ -62,9 +63,9 @@ export default function DashboardLayout({ children }) {
     router.push('/login');
   };
 
-  const filteredNavigation = navigation.filter(
-    (item) => !item.adminOnly || isAdmin
-  );
+  const filteredNavigation = isAdmin
+  ? navigation.filter(item => ['Dashboard', 'Change Password', 'Reports'].includes(item.name))
+  : navigation.filter(item => !item.adminOnly);
 
   // Function to check if a nav item is active
   const isActive = (href) => {
@@ -200,7 +201,14 @@ export default function DashboardLayout({ children }) {
 
           <div className="h-6 w-px bg-brand-cream lg:hidden" />
 
-          <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+          <div className="flex flex-1 gap-x-4 self-stretch justify-center items-center lg:gap-x-6">
+            <Image
+              src='https://siddhartha.edu.in/wp-content/uploads/2025/05/sahe-white-logo.png'
+              alt="Profile Picture"
+              width={200}
+              height={40}
+              className="h-14 w-70 rounded-lg bg-brand-primary m-1"
+            />
             {/* <div className="relative flex flex-1">
               <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <Search className="h-5 w-5 text-brand-secondary" />
