@@ -6,7 +6,6 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import Link from 'next/link';
 import { FileSearch, Upload, Calendar, Hash, FileText, Award, X, FileIcon } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function PatentsPage() {
   const {user, token} = useAuth();

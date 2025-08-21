@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { Users, Upload, Calendar, FileIcon, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function MembershipPage() {
   const {user, token} = useAuth();

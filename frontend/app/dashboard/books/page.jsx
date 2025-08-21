@@ -4,7 +4,6 @@ import toast from 'react-hot-toast';
 import React, { use, useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { BookOpen, Upload, Calendar, Building, FileText, Type, FileIcon, X } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function BooksPage() {
   const {user, token} = useAuth(); 

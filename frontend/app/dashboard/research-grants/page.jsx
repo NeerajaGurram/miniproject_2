@@ -5,7 +5,6 @@ import toast from 'react-hot-toast';
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { FileText, Upload, Calendar, Building, Award, DollarSign, Clock, Hash, FileIcon, X, TrendingUp } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 export default function ResearchGrantsPage() {
   const {user, token} = useAuth();
