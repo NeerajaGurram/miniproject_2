@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const JournalEdited = require('../models/JournalEdited');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -20,7 +21,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 function getAcademicYear() {
@@ -111,6 +112,102 @@ router.get('/file/:path', async (req, res) => {
   }
 });
 
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show journals edited from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own journals edited
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const journalsEdited = await JournalEdited.find(query).lean();
+
+    // Populate user details for each journal
+    const journalsEditedWithUserDetails = await Promise.all(
+      journalsEdited.map(async (journaledited) => {
+        const user = await User.findOne({ empId: journaledited.empId }).select('name department').lean();
+        return {
+          ...journaledited,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(journalsEditedWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching journals edited:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update journal edited status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the journal edited belongs to their department
+    if (req.user.role === 'incharge') {
+      const journaledited = await JournalEdited.findById(id);
+      if (!journaledited) {
+        return res.status(404).json({ error: 'Journal Edited not found' });
+      }
+
+      // Get the faculty member who submitted the journal edited
+      const faculty = await User.findOne({ empId: journaledited.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update journals edited from your department' });
+      }
+    }
+
+    const updatedJournalEdited = await JournalEdited.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedJournalEdited) {
+      return res.status(404).json({ error: 'Journal Edited not found' });
+    }
+    
+    res.json({
+      message: 'Journal Edited status updated successfully',
+      data: updatedJournalEdited
+    });
+  } catch (error) {
+    console.error('Error updating journal edited status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
 // const express = require('express');
 // const multer = require('multer');
@@ -146,7 +243,7 @@ module.exports = router;
 // const upload = multer({ 
 //   storage: storage,
 //   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 // });
 
 // // Submit PhD details

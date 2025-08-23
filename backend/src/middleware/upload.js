@@ -85,7 +85,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
   storage,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+    fileSize: 50 * 1024 * 1024, // 10MB limit
     files: 5 // Maximum 5 files per request
   },
   fileFilter
@@ -113,7 +113,7 @@ const uploadProfileImage = multer({
     }
   }),
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit for profile images
+    fileSize: 50 * 1024 * 1024 // 50MB limit for profile images
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|gif/;

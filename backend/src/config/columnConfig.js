@@ -41,7 +41,7 @@ const columnConfig = {
       { key: 'book', label: 'Book Title' },
       { key: 'type1', label: 'Type' },
       { key: 'publisher', label: 'Publisher' },
-      { key: 'pub1', label: 'ISBN' },
+      { key: 'pub1', label: 'Publication Details' },
       { key: 'sdate', label: 'Publication Date' },
       { key: 'status', label: 'Approval Status' }
     ]

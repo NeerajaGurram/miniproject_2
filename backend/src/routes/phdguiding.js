@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const PhdGuiding = require('../models/PhdGuiding');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -20,7 +21,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 function getAcademicYear() {
@@ -109,6 +110,102 @@ router.get('/file/:path', async (req, res) => {
   }
 });
 
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show phd guidings from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own phd guidings
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const phdGuidings = await PhdGuiding.find(query).lean();
+
+    // Populate user details for each phd guiding
+    const phdGuidingsWithUserDetails = await Promise.all(
+      phdGuidings.map(async (phdGuiding) => {
+        const user = await User.findOne({ empId: phdGuiding.empId }).select('name department').lean();
+        return {
+          ...phdGuiding,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(phdGuidingsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching phd guidings:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update phd guiding status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the phd guiding belongs to their department
+    if (req.user.role === 'incharge') {
+      const phdGuiding = await PhdGuiding.findById(id);
+      if (!phdGuiding) {
+        return res.status(404).json({ error: 'PhD Guiding not found' });
+      }
+
+      // Get the faculty member who submitted the phd guiding
+      const faculty = await User.findOne({ empId: phdGuiding.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update phd guidings from your department' });
+      }
+    }
+
+    const updatedPhdGuiding = await PhdGuiding.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedPhdGuiding) {
+      return res.status(404).json({ error: 'PhD Guiding not found' });
+    }
+    
+    res.json({
+      message: 'PhD Guiding status updated successfully',
+      data: updatedPhdGuiding
+    });
+  } catch (error) {
+    console.error('Error updating phd guiding status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
 // const express = require('express');
 // const multer = require('multer');
@@ -144,7 +241,7 @@ module.exports = router;
 // const upload = multer({ 
 //   storage: storage,
 //   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 // });
 
 // // Submit PhDGuiding details

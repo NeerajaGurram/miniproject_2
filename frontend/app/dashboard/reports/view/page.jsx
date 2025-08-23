@@ -295,6 +295,7 @@ export default function ReportViewPage() {
           </div>
 
           {/* Year Filter */}
+          {year === '' && user?.role === 'admin' && (
           <div>
             <label className="block text-sm font-medium text-brand-primary mb-1">Academic Year</label>
             <select
@@ -308,6 +309,7 @@ export default function ReportViewPage() {
               ))}
             </select>
           </div>
+          )}
 
           {/* Branch Filter (only for admin/incharge) */}
           {branch === '' && user?.role === 'admin' && (

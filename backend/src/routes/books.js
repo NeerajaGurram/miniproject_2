@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Book = require('../models/Book');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -21,7 +22,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
 function getAcademicYear() {
@@ -136,34 +137,97 @@ router.get('/file/:filename', async (req, res) => {
 // Get all books for a user
 router.get('/', auth, async (req, res) => {
   try {
-    const books = await Book.find({ empId: req.user.empId });
-    res.json(books);
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show books from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own books
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const books = await Book.find(query).lean();
+
+    // Populate user details for each book
+    const booksWithUserDetails = await Promise.all(
+      books.map(async (book) => {
+        const user = await User.findOne({ empId: book.empId }).select('name department').lean();
+        return {
+          ...book,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(booksWithUserDetails);
   } catch (error) {
-    res.status(500).json({ 
-      error: 'Server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
+    console.error('Error fetching books:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get single book by ID
-router.get('/:id', auth, async (req, res) => {
+// PUT route to update book status
+router.put('/:id/status', auth, async (req, res) => {
   try {
-    const book = await Book.findOne({ 
-      _id: req.params.id,
-      empId: req.user.empId 
-    });
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
     
-    if (!book) {
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+    
+    // If user is incharge, verify the book belongs to their department
+    if (req.user.role === 'incharge') {
+      const book = await Book.findById(id);
+      if (!book) {
+        return res.status(404).json({ error: 'Book not found' });
+      }
+
+      // Get the faculty member who submitted the book
+      const faculty = await User.findOne({ empId: book.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update books from your department' });
+      }
+    }
+
+    const updatedBook = await Book.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedBook) {
       return res.status(404).json({ error: 'Book not found' });
     }
     
-    res.json(book);
-  } catch (error) {
-    res.status(500).json({ 
-      error: 'Server error',
-      message: process.env.NODE_ENV === 'development' ? error.message : undefined
+    res.json({
+      message: 'Book status updated successfully',
+      data: updatedBook
     });
+  } catch (error) {
+    console.error('Error updating book status:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -202,7 +266,7 @@ module.exports = router;
 // const upload = multer({ 
 //   storage: storage,
 //   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 // });
 
 // // Submit Journal details

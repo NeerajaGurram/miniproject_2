@@ -2,11 +2,12 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Seminar = require('../models/Seminar');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
 const mongoUrl = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const dbName = 'seminars'; 
+const dbName = 'seminars';
 
 const storage = multer.memoryStorage();
 const fileFilter = (req, file, cb) => {
@@ -20,7 +21,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
 function getAcademicYear() {
@@ -38,14 +39,15 @@ function getAcademicYear() {
   }
 }
 
+// POST route to create a new seminar/conference record
 router.post('/', auth, upload.single('file'), async (req, res) => {
   try {
-    const {title, type1, type2, type3, host, agency, comment, date1, date2 } = req.body;
+    const { title, type1, type2, type3, host, agency, comment, date1, date2 } = req.body;
     if (!title || !type1 || !type2 || !type3 || !host || !agency || !comment || !date1 || !date2) {
       return res.status(400).json({ error: 'All fields are required' });
     }
     if (!req.file) {
-      return res.status(400).json({ error: 'File upload is required' });
+      return res.status(400).json({ error: 'File is required' });
     }
 
     const client = new MongoClient(mongoUrl);
@@ -57,6 +59,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
     uploadStream.end(req.file.buffer);
 
     const academic_year = getAcademicYear();
+
     uploadStream.on('finish', async (file) => {
       const seminarRecord = new Seminar({
         empId: req.user.empId,
@@ -70,7 +73,8 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
         date1: new Date(date1),
         date2: new Date(date2),
         path: uploadStream.filename,
-        academic_year
+        academic_year,
+        status: 'Pending' // Default status
       });
 
       await seminarRecord.save();
@@ -92,111 +96,124 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
   }
 });
 
-// Route to retrieve PDF using path field (filename or file ID)
-router.get('/file/:path', async (req, res) => {
-    const { path } = req.params;
-    try {
-        const client = new MongoClient(mongoUrl);
-        await client.connect();
-        const db = client.db(dbName);
-        const bucket = new GridFSBucket(db);
-
-        // You may use filename or file ID for retrieval, here's for filename:
-        const downloadStream = bucket.openDownloadStreamByName(path);
-
-        res.setHeader('Content-Type', 'application/pdf');
-        downloadStream.pipe(res);
-        downloadStream.on('end', () => client.close());
-        downloadStream.on('error', () => {
-            client.close();
-            res.status(404).json({ error: 'File not found' });
-        });
-    } catch (error) {
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
-
-// Get all seminars for a user
+// GET route to fetch seminars with optional status filter
 router.get('/', auth, async (req, res) => {
   try {
-    const seminars = await Seminar.find({ empId: req.user.empId });
-    res.json(seminars);
+    const { status } = req.query;
+    let query = {};
+    
+    // If user is incharge, only show seminars from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own seminars
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+    
+    const seminars = await Seminar.find(query).lean();
+    
+    // Populate user details for each seminar
+    const seminarsWithUserDetails = await Promise.all(
+      seminars.map(async (seminar) => {
+        const user = await User.findOne({ empId: seminar.empId }).select('name department').lean();
+        return {
+          ...seminar,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+    
+    res.json(seminarsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching seminars:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update seminar status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+    
+    // If user is incharge, verify the seminar belongs to their department
+    if (req.user.role === 'incharge') {
+      const seminar = await Seminar.findById(id);
+      if (!seminar) {
+        return res.status(404).json({ error: 'Seminar not found' });
+      }
+      
+      // Get the faculty member who submitted the seminar
+      const faculty = await User.findOne({ empId: seminar.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update seminars from your department' });
+      }
+    }
+    
+    const updatedSeminar = await Seminar.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+    
+    if (!updatedSeminar) {
+      return res.status(404).json({ error: 'Seminar not found' });
+    }
+    
+    res.json({
+      message: 'Seminar status updated successfully',
+      data: updatedSeminar
+    });
+  } catch (error) {
+    console.error('Error updating seminar status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET route to download seminar file
+router.get('/file/:path', async (req, res) => {
+  const { path } = req.params;
+  try {
+    const client = new MongoClient(mongoUrl);
+    await client.connect();
+    const db = client.db(dbName);
+    const bucket = new GridFSBucket(db);
+
+    const downloadStream = bucket.openDownloadStreamByName(path);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    downloadStream.pipe(res);
+    downloadStream.on('end', () => client.close());
+    downloadStream.on('error', () => {
+      client.close();
+      res.status(404).json({ error: 'File not found' });
+    });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 module.exports = router;
-// const express = require('express');
-// const multer = require('multer');
-// const fs = require('fs');
-// const path = require('path');
-// const {auth} = require('../middleware/auth');
-// const Seminar = require('../models/Seminar');
-// const router = express.Router();
-
-// // Configure multer storage
-// const storage = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     // Ensure the uploads directory exists
-//     const dir = path.join(__dirname, '../../uploads/seminars');
-//     fs.mkdirSync(dir, { recursive: true }); // Create directory if it doesn't exist
-//     cb(null, dir);
-//   },
-//   filename: function (req, file, cb) {
-//     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-//     cb(null, `${req.user.empId}${uniqueSuffix}${path.extname(file.originalname)}`);
-//   }
-// });
-
-// // File filter to allow only PDFs
-// const fileFilter = (req, file, cb) => {
-//   if (file.mimetype === 'application/pdf') {
-//     cb(null, true);
-//   } else {
-//     cb(new Error('Only PDF files are allowed'), false);
-//   }
-// };
-
-// const upload = multer({ 
-//   storage: storage,
-//   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
-// });
-
-// router.post('/', auth, upload.single('file'), async (req, res) => {
-//   try {
-//     const {title, type1, type2, type3, host, agency, comment, date1, date2 } = req.body;
-//     if (!title || !type1 || !type2 || !type3 || !host || !agency || !comment || !date1 || !date2) {
-//       return res.status(400).json({ error: 'All fields are required' });
-//     }
-//     if (!req.file) {
-//         return res.status(400).json({ error: 'File upload is required' });
-//     }
-//     const seminarRecord = new Seminar({
-//       empId: req.user.empId,
-//       title,
-//       type1,
-//       type2,
-//       type3,
-//       host,
-//       agency,
-//       comment,
-//       date1:new Date(date1),
-//       date2:new Date(date2),
-//       path: req.file.path
-//     });
-
-//     await seminarRecord.save();
-//     res.status(201).json({
-//       message: 'Seminar details submitted successfully',
-//       data: seminarRecord
-//     });
-
-//   } catch (error) {
-//     console.error('Error submitting Seminar details:', error);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
-
-// module.exports = router;

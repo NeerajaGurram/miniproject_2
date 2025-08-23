@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Phd = require('../models/Phd');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -20,7 +21,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 function getAcademicYear() {
@@ -112,6 +113,102 @@ router.get('/file/:path', async (req, res) => {
   }
 });
 
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show phds from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own phds
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const phds = await Phd.find(query).lean();
+
+    // Populate user details for each phd
+    const phdsWithUserDetails = await Promise.all(
+      phds.map(async (phd) => {
+        const user = await User.findOne({ empId: phd.empId }).select('name department').lean();
+        return {
+          ...phd,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(phdsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching phds:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update phd status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the phd belongs to their department
+    if (req.user.role === 'incharge') {
+      const phd = await Phd.findById(id);
+      if (!phd) {
+        return res.status(404).json({ error: 'PhD not found' });
+      }
+
+      // Get the faculty member who submitted the phd
+      const faculty = await User.findOne({ empId: phd.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update phds from your department' });
+      }
+    }
+
+    const updatedPhd = await Phd.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedPhd) {
+      return res.status(404).json({ error: 'PhD not found' });
+    }
+    
+    res.json({
+      message: 'PhD status updated successfully',
+      data: updatedPhd
+    });
+  } catch (error) {
+    console.error('Error updating phd status:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
 // const express = require('express');
 // const multer = require('multer');
@@ -147,7 +244,7 @@ module.exports = router;
 // const upload = multer({ 
 //   storage: storage,
 //   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 // });
 
 // // Submit PhD details

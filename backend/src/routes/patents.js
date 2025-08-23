@@ -18,7 +18,7 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 5 * 1024 * 1024 }
+    limits: { fileSize: 50 * 1024 * 1024 }
 });
 
 function getAcademicYear() {
@@ -156,7 +156,7 @@ module.exports = router;
 // const upload = multer({ 
 //   storage: storage,
 //   fileFilter: fileFilter,
-//   limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+//   limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 // });
 
 // // Submit Patent details
