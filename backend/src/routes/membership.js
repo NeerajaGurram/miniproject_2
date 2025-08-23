@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Membership = require('../models/Membership');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -105,6 +106,102 @@ router.get('/file/:path', async (req, res) => {
       res.status(404).json({ error: 'File not found' });
     });
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show memberships from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own memberships
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const memberships = await Membership.find(query).lean();
+
+    // Populate user details for each membership
+    const membershipsWithUserDetails = await Promise.all(
+      memberships.map(async (membership) => {
+        const user = await User.findOne({ empId: membership.empId }).select('name department').lean();
+        return {
+          ...membership,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(membershipsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching memberships:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update membership status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the membership belongs to their department
+    if (req.user.role === 'incharge') {
+      const membership = await Membership.findById(id);
+      if (!membership) {
+        return res.status(404).json({ error: 'Membership not found' });
+      }
+
+      // Get the faculty member who submitted the membership
+      const faculty = await User.findOne({ empId: membership.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update memberships from your department' });
+      }
+    }
+
+    const updatedMembership = await Membership.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedMembership) {
+      return res.status(404).json({ error: 'Membership not found' });
+    }
+    
+    res.json({
+      message: 'Membership status updated successfully',
+      data: updatedMembership
+    });
+  } catch (error) {
+    console.error('Error updating membership status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

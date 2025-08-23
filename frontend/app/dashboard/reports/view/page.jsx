@@ -259,7 +259,7 @@ export default function ReportViewPage() {
       </div>
 
       {isSummary && data.facultyCount !== undefined && (
-        <div className="mb-6 p-4 bg-gradient-subtle rounded-lg border border-brand-cream">
+        <div className="mb-4 p-4 bg-gradient-subtle rounded-lg border border-brand-cream">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-brand-primary font-medium">Department</p>
@@ -277,7 +277,7 @@ export default function ReportViewPage() {
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-gradient-subtle rounded-lg border border-brand-cream">
+      <div className="mb-4 p-4 bg-gradient-subtle rounded-lg border border-brand-cream">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Status Filter */}
           <div>
@@ -311,7 +311,7 @@ export default function ReportViewPage() {
           </div>
           )}
 
-          {/* Branch Filter (only for admin/incharge) */}
+          {/* Branch Filter (only for admin) */}
           {branch === '' && user?.role === 'admin' && (
             <div>
               <label className="block text-sm font-medium text-brand-primary mb-1">Branch</label>
@@ -365,9 +365,12 @@ export default function ReportViewPage() {
             />
           </div>
         </div> */}
-
+        {/* After the filter section, add this: */}
+        <div className="mt-2 text-sm text-gray-500">
+          <p>Note: Filters are only applied to the view on this page and do not affect the Excel download.</p>
+        </div>
         {/* Apply Filters Button */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end mt-2">
           <button
             onClick={() => setFilters({
             status: '',
@@ -386,11 +389,11 @@ export default function ReportViewPage() {
 
       <div className="mb-4">
         <p className="text-brand-primary">
-          {displayData.length} record{displayData.length !== 1 ? 's' : ''} found
+          {filteredData.length} record{filteredData.length !== 1 ? 's' : ''} found
         </p>
       </div>
 
-      {tableColumns.length > 0 && displayData.length > 0 && (
+      {tableColumns.length > 0 && filteredData.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-brand-primary">
           <table className="min-w-full bg-white border-separate">
             <thead>
@@ -400,7 +403,7 @@ export default function ReportViewPage() {
                     {column.label}
                   </th>
                 ))}
-                {displayData.some(item => hasUploadedFile(item)) && (
+                {filteredData.some(item => hasUploadedFile(item)) && (
                   <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">VIEW</th>
                 )}
               </tr>
@@ -428,7 +431,7 @@ export default function ReportViewPage() {
                       )}
                     </td>
                   ))}
-                  {displayData.some(item => hasUploadedFile(item)) && (
+                  {filteredData.some(item => hasUploadedFile(item)) && (
                     <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
                       {hasUploadedFile(item) ? (
                         <a 
@@ -451,7 +454,7 @@ export default function ReportViewPage() {
         </div>
       )}
 
-      {displayData.length === 0 && (
+      {filteredData.length === 0 && (
         <div className="text-center p-8 bg-gradient-subtle rounded-lg border border-brand-cream">
           <p className="text-brand-primary font-medium">No data found for the selected criteria.</p>
           <p className="text-sm mt-2 text-brand-secondary">Try selecting different filters or check if data exists for the selected department and year.</p>

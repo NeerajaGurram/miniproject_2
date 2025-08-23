@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Visit = require('../models/Visit');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -108,6 +109,102 @@ router.get('/file/:path', async (req, res) => {
       res.status(404).json({ error: 'File not found' });
     });
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show visits from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own visits
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const visits = await Visit.find(query).lean();
+
+    // Populate user details for each visit
+    const visitsWithUserDetails = await Promise.all(
+      visits.map(async (visit) => {
+        const user = await User.findOne({ empId: visit.empId }).select('name department').lean();
+        return {
+          ...visit,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(visitsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching visits:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update visit status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the visit belongs to their department
+    if (req.user.role === 'incharge') {
+      const visit = await Visit.findById(id);
+      if (!visit) {
+        return res.status(404).json({ error: 'Visit not found' });
+      }
+
+      // Get the faculty member who submitted the visit
+      const faculty = await User.findOne({ empId: visit.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update visits from your department' });
+      }
+    }
+
+    const updatedVisit = await Visit.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedVisit) {
+      return res.status(404).json({ error: 'Visit not found' });
+    }
+    
+    res.json({
+      message: 'Visit status updated successfully',
+      data: updatedVisit
+    });
+  } catch (error) {
+    console.error('Error updating visit status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

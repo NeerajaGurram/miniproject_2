@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Consultancy = require('../models/Consultancy');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -105,6 +106,102 @@ router.get('/file/:path', async (req, res) => {
       res.status(404).json({ error: 'File not found' });
     });
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show consultancies from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own consultancies
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const consultancies = await Consultancy.find(query).lean();
+
+    // Populate user details for each consultancy
+    const consultanciesWithUserDetails = await Promise.all(
+      consultancies.map(async (consultancy) => {
+        const user = await User.findOne({ empId: consultancy.empId }).select('name department').lean();
+        return {
+          ...consultancy,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(consultanciesWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching consultancies:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update consultancy status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the consultancy belongs to their department
+    if (req.user.role === 'incharge') {
+      const consultancy = await Consultancy.findById(id);
+      if (!consultancy) {
+        return res.status(404).json({ error: 'Consultancy not found' });
+      }
+
+      // Get the faculty member who submitted the consultancy
+      const faculty = await User.findOne({ empId: consultancy.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update consultancies from your department' });
+      }
+    }
+
+    const updatedConsultancy = await Consultancy.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedConsultancy) {
+      return res.status(404).json({ error: 'Consultancy not found' });
+    }
+    
+    res.json({
+      message: 'Consultancy status updated successfully',
+      data: updatedConsultancy
+    });
+  } catch (error) {
+    console.error('Error updating consultancy status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

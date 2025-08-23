@@ -192,7 +192,7 @@ export default function PhDPage() {
 
   const handleStatusChange = async () => {
     try {
-      console.log('slected',selectedPhd._id)
+      // console.log('slected',selectedPhd._id)
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/phd/${selectedPhd._id}/status`, {
         method: 'PUT',
         headers: {
@@ -631,14 +631,14 @@ export default function PhDPage() {
                         <div className="flex justify-center space-x-2">
                           <button
                             onClick={() => openConfirmDialog(phd, 'accept')}
-                            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors cursor-pointer"
                             title="Accept"
                           >
                             <Check className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => openConfirmDialog(phd, 'reject')}
-                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors cursor-pointer"
                             title="Reject"
                           >
                             <Ban className="h-4 w-4" />
@@ -704,7 +704,7 @@ export default function PhDPage() {
         href="/"
         className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
       >
-        Go Home
+        Return to Dashboard
       </a>
     </div>
   );

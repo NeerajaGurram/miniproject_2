@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { auth } = require('../middleware/auth');
 const Qualification = require('../models/Qualification');
+const User = require('../models/User');
 const router = express.Router();
 const { MongoClient, GridFSBucket } = require('mongodb');
 
@@ -106,6 +107,102 @@ router.get('/file/:path', async (req, res) => {
       res.status(404).json({ error: 'File not found' });
     });
   } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/', auth, async (req, res) => {
+  try {
+    const { status } = req.query;
+    let query = {};
+
+    // If user is incharge, only show qualifications from their department
+    if (req.user.role === 'incharge') {
+      // Get faculty in the same department as incharge
+      const facultyInDepartment = await User.find({ 
+        department: req.user.department, 
+        role: 'faculty' 
+      }).select('empId');
+      
+      const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+      query.empId = { $in: facultyEmpIds };
+    } else if (req.user.role === 'faculty') {
+      // Faculty can only see their own qualifications
+      query.empId = req.user.empId;
+    }
+    
+    // Add status filter if provided
+    if (status) {
+      query.status = status;
+    }
+
+    const qualifications = await Qualification.find(query).lean();
+
+    // Populate user details for each qualification
+    const qualificationsWithUserDetails = await Promise.all(
+      qualifications.map(async (qualification) => {
+        const user = await User.findOne({ empId: qualification.empId }).select('name department').lean();
+        return {
+          ...qualification,
+          employee: user ? user.name : 'Unknown',
+          department: user ? user.department : 'Unknown'
+        };
+      })
+    );
+
+    res.json(qualificationsWithUserDetails);
+  } catch (error) {
+    console.error('Error fetching qualifications:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT route to update qualification status
+router.put('/:id/status', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    console.log('Update status request by user:', status);
+    // Validate status
+    if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+    
+    // Check if user has permission to update status (admin or incharge)
+    if (!['admin', 'incharge'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
+
+    // If user is incharge, verify the qualification belongs to their department
+    if (req.user.role === 'incharge') {
+      const qualification = await Qualification.findById(id);
+      if (!qualification) {
+        return res.status(404).json({ error: 'Qualification not found' });
+      }
+
+      // Get the faculty member who submitted the qualification
+      const faculty = await User.findOne({ empId: qualification.empId });
+      if (!faculty || faculty.department !== req.user.department) {
+        return res.status(403).json({ error: 'You can only update qualifications from your department' });
+      }
+    }
+
+    const updatedQualification = await Qualification.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true }
+    );
+
+    if (!updatedQualification) {
+      return res.status(404).json({ error: 'Qualification not found' });
+    }
+    
+    res.json({
+      message: 'Qualification status updated successfully',
+      data: updatedQualification
+    });
+  } catch (error) {
+    console.error('Error updating qualification status:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

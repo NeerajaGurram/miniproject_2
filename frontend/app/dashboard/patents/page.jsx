@@ -2,10 +2,10 @@
 import DashboardLayout from '../../components/DashboardLayout';
 import toast from 'react-hot-toast';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
 import Link from 'next/link';
-import { FileSearch, Upload, Calendar, Hash, FileText, Award, X, FileIcon } from 'lucide-react';
+import { FileSearch, Upload, Calendar, Check, Ban, Hash, FileText, Award, X, FileIcon } from 'lucide-react';
 
 export default function PatentsPage() {
   const {user, token} = useAuth();
@@ -20,7 +20,42 @@ export default function PatentsPage() {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
-  const [selectedFileName, setSelectedFileName] = useState('');
+  const [selectedFileName, setSelectedFileName] = useState('');  
+  const [patentsData, setPatentsData] = useState([]);
+  const [loadingPatents, setLoadingPatents] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedPatent, setSelectedPatent] = useState(null);
+  const [actionType, setActionType] = useState('');
+
+  // Fetch patents data for incharge
+  useEffect(() => {
+    if (user?.role === 'incharge') {
+      fetchPatentsData();
+    }
+  }, [user, token]);
+
+  const fetchPatentsData = async () => {
+    try {
+      setLoadingPatents(true);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/patents?status=Pending`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch patents data');
+      }
+      
+      const result = await response.json();
+      setPatentsData(result);
+    } catch (error) {
+      console.error('Error fetching patents:', error);
+      toast.error('Failed to load patents data');
+    } finally {
+      setLoadingPatents(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -126,7 +161,46 @@ export default function PatentsPage() {
       fileInputRef.current.value = null;
     }
   };
+  const openConfirmDialog = (patent, action) => {
+    setSelectedPatent(patent);
+    setActionType(action);
+    setShowConfirmDialog(true);
+  };
 
+  const closeConfirmDialog = () => {
+    setShowConfirmDialog(false);
+    setSelectedPatent(null);
+    setActionType('');
+  };
+
+  const handleStatusChange = async () => {
+    try {
+      // console.log('slected',selectedPatent._id)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/patents/${selectedPatent._id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: actionType === 'accept' ? 'Accepted' : 'Rejected' })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update patent status');
+      }
+
+      toast.success(`Patent ${actionType === 'accept' ? 'accepted' : 'rejected'} successfully`);
+      fetchPatentsData(); // Refresh the data
+    } catch (error) {
+      console.error('Error updating patent status:', error);
+      toast.error('Failed to update patent status');
+    } finally {
+      closeConfirmDialog();
+    }
+  };
+
+  // Render faculty form
+  if (user?.role === 'faculty') {
   return (
     <div>
     <div className="flex justify-center p-4">
@@ -369,15 +443,185 @@ export default function PatentsPage() {
         </div>
       </form>
     </div>
-    <div className='flex justify-center mt-6'>
+    {/* <div className='flex justify-center mt-6'>
       <Link 
         href="/dashboard/patents/view" 
         className="px-6 py-3 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-brand-primary focus:ring-offset-2 transition-all duration-200 shadow-md hover:shadow-lg"
       >
         View Uploaded Patents
       </Link>
+    </div> */}
     </div>
+  );
+}
+  if (user?.role === 'incharge') {
+    return (
+      <div className="p-4 max-w-6xl mx-auto">
+        <div className="bg-gradient-brand p-6 text-center mb-6 rounded-lg">
+          <div className="flex items-center justify-center mb-2">
+            <Award className="h-8 w-8 text-white mr-3" />
+            <h2 className="text-2xl font-bold text-white">Patents Approval</h2>
+          </div>
+          <p className="text-brand-cream text-sm">Review and approve patents from your department</p>
+        </div>
+
+        {loadingPatents ? (
+          <div className="text-center p-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4"></div>
+            <p>Loading patents data...</p>
+          </div>
+        ) : patentsData.length > 0 ? (
+          <>
+            <div className="mb-4">
+              <p className="text-brand-primary">
+                {patentsData.length} patent{patentsData.length !== 1 ? 's' : ''} pending approval
+              </p>
+            </div>
+
+            <div className="overflow-x-auto rounded-lg border border-brand-primary">
+              <table className="min-w-full bg-white border-separate">
+                <thead>
+                  <tr className="bg-gradient-subtle">
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Employee ID
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Employee Name
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Patent Title
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      File Number
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Date
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Status
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Document
+                    </th>
+                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {patentsData.map((patent, index) => (
+                    <tr key={index} className="hover:bg-gray-50 even:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.empId}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.employee}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.title}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.fnum}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.date1 ? new Date(patent.date1).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                        {patent.status1}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
+                        {patent.path ? (
+                          <a
+                            href={`${process.env.NEXT_PUBLIC_API_URL}/patents/file/${patent.path}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-brand-secondary hover:text-brand-accent font-medium"
+                          >
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            onClick={() => openConfirmDialog(patent, 'accept')}
+                            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors cursor-pointer"
+                            title="Accept"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => openConfirmDialog(patent, 'reject')}
+                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors cursor-pointer"
+                            title="Reject"
+                          >
+                            <Ban className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : (
+          <div className="text-center p-8 bg-gradient-subtle rounded-lg border border-brand-cream">
+            <p className="text-brand-primary font-medium">No pending patents found for your department.</p>
+          </div>
+        )}
+
+        {/* Confirmation Dialog */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+              <h3 className="text-lg font-bold text-brand-primary mb-4">
+                Confirm {actionType === 'accept' ? 'Acceptance' : 'Rejection'}
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to {actionType} this patent? This action cannot be undone.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={closeConfirmDialog}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleStatusChange}
+                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                    actionType === 'accept' 
+                      ? 'bg-green-500 hover:bg-green-600' 
+                      : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  Confirm {actionType === 'accept' ? 'Accept' : 'Reject'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Default return for other roles
+  return (
+    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-brand-primary p-6">
+      <div className="text-6xl mb-4 animate-bounce">🚫</div>
+      <h1 className="lg:text-5xl text-2xl font-bold mb-2">404 - Page Not Found</h1>
+      <p className="text-lg text-gray-600 mb-6">
+        Sorry, we couldn’t find that page.
+      </p>
+      <a
+        href="/"
+        className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
+      >
+        Return to Dashboard
+      </a>
     </div>
-    
   );
 }
