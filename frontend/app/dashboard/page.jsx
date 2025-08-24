@@ -8,6 +8,7 @@ import RecentResearch from '../components/RecentResearch';
 import QuickActions from '../components/QuickActions';
 import FacultyDashboard from '../../components/FacultyDashboard';
 import DepartmentOverview from '../../components/DepartmentOverview';
+import AdminDashboard from '../../components/AdminDashboard';
 
 export default function DashboardPage() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -27,8 +28,9 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Role-based Dashboard */}
         {user?.role === 'faculty' && <FacultyDashboard />}
-        {(user?.role === 'admin' || user?.role === 'incharge') && <DepartmentOverview />}
-        
+        {user?.role === 'incharge' && <DepartmentOverview />}
+        {user?.role === 'admin' && <AdminDashboard />}
+
         {/* Fallback for other roles */}
         {!['faculty', 'admin', 'incharge'].includes(user?.role) && (
           <>
