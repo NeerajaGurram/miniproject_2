@@ -213,4 +213,33 @@ router.get('/file/:path', async (req, res) => {
   }
 });
 
+// GET route to fetch pending count for incharge users
+router.get('/pending-count', auth, async (req, res) => {
+  try {
+    // Only incharge users can access this endpoint
+    if (req.user.role !== 'incharge') {
+      return res.status(403).json({ error: 'Access denied. Only incharge users can view pending counts.' });
+    }
+    
+    // Get faculty in the same department as incharge
+    const facultyInDepartment = await User.find({ 
+      department: req.user.department, 
+      role: 'faculty' 
+    }).select('empId');
+    
+    const facultyEmpIds = facultyInDepartment.map(f => f.empId);
+    
+    // Count pending awards for faculty in the incharge's department
+    const pendingCount = await Award.countDocuments({
+      empId: { $in: facultyEmpIds },
+      status: 'Pending'
+    });
+    
+    res.json({ count: pendingCount });
+  } catch (error) {
+    console.error('Error fetching pending awards count:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;
