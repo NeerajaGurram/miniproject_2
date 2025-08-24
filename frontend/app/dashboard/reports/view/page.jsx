@@ -457,7 +457,7 @@ export default function ReportViewPage() {
       {filteredData.length === 0 && (
         <div className="text-center p-8 bg-gradient-subtle rounded-lg border border-brand-cream">
           <p className="text-brand-primary font-medium">No data found for the selected criteria.</p>
-          <p className="text-sm mt-2 text-brand-secondary">Try selecting different filters or check if data exists for the selected department and year.</p>
+          <p className="text-sm mt-2 text-brand-secondary">Try selecting different filters or check if data exists for the selected {user?.role === 'admin' ? 'department, type' : 'type'} and year.</p>
         </div>
       )}
     </div>

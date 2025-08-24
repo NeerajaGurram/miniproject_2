@@ -76,6 +76,18 @@ export default function VisitsPage() {
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Check file size before setting it
+      if (file.size > 50 * 1024 * 1024) { // 50MB in bytes
+        toast.error('File size exceeds 50MB limit. Please choose a smaller file.');
+        setErrors(prev => ({ ...prev, file: 'File size must be less than 50MB' }));
+        
+        // Clear the file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
       setFormData(prev => ({ ...prev, file }));
       setSelectedFileName(file.name);
       if (errors.file) {

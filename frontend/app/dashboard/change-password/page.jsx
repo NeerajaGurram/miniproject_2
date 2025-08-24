@@ -149,8 +149,8 @@ export default function ChangePasswordPage() {
           {message && (
             <div className={`p-4 rounded-lg border ${
               message.includes('successfully') 
-                ? 'bg-brand-secondary bg-opacity-10 text-brand-secondary border-brand-secondary' 
-                : 'bg-red-500 bg-opacity-10 text-red-500 border-red-500'
+                ? 'bg-brand-secondary bg-opacity-10 text-white border-brand-secondary' 
+                : 'bg-red-500 bg-opacity-10 text-white border-red-500'
             }`}>
               {message}
             </div>
