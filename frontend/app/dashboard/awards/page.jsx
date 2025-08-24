@@ -1,5 +1,4 @@
 'use client';
-import DashboardLayout from '../../components/DashboardLayout';
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { Award, Upload, Calendar, Building, FileText, Star, Users, FileIcon, X, Check, Ban } from 'lucide-react';

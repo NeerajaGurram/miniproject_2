@@ -1,5 +1,4 @@
 'use client';
-import DashboardLayout from '../../components/DashboardLayout';
 import toast from 'react-hot-toast';
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
