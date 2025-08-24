@@ -2,7 +2,6 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useAuth } from '../../../../lib/auth';
-import DashboardLayout from '../../../../components/DashboardLayout';
 import Link from 'next/link';
 
 export default function ViewPatents() {

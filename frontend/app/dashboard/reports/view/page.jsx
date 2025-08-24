@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAuth } from '../../../../lib/auth';
-import DashboardLayout from '../../../../components/DashboardLayout';
 import Link from 'next/link';
 import { getColumnConfig } from '../../../config/columnConfig';
 import { FileText, Download } from 'lucide-react';
@@ -468,7 +467,6 @@ export default function ReportViewPage() {
 // import { useEffect, useState } from 'react';
 // import { useSearchParams } from 'next/navigation';
 // import { useAuth } from '../../../../lib/auth';
-// import DashboardLayout from '../../../../components/DashboardLayout';
 // import Link from 'next/link';
 // import { getColumnConfig } from '../../../config/columnConfig';
 
