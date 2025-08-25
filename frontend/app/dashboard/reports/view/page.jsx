@@ -288,7 +288,7 @@ export default function ReportViewPage() {
             >
               <option value="">All</option>
               <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
+              <option value="Accepted">Accepted</option>
               <option value="Rejected">Rejected</option>
             </select>
           </div>
