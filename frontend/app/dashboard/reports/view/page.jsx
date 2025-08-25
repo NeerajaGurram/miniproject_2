@@ -414,17 +414,22 @@ export default function ReportViewPage() {
                     <td key={column.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
                       {/* {renderCell(item[column.key])} */}
                       {column.key === 'status' ? (
-                        <span
-                          className={`px-2 py-1 rounded-full font-semibold text-white ${
-                            renderCell(item[column.key]) === 'Pending'
-                              ? 'bg-amber-400'
-                              : renderCell(item[column.key]) === 'Accepted'
-                              ? 'bg-green-500'
-                              : 'bg-red-500'
-                          }`}
-                        >
-                          {renderCell(item[column.key])}
-                        </span>
+                        <>
+                          <span
+                            className={`px-2 py-1 rounded-full font-semibold text-white ${
+                              renderCell(item[column.key]) === 'Pending'
+                                ? 'bg-amber-400'
+                                : renderCell(item[column.key]) === 'Accepted'
+                                ? 'bg-green-500'
+                                : 'bg-red-500'
+                            }`}
+                          >
+                            {renderCell(item[column.key])}
+                          </span>
+                          {renderCell(item[column.key]) === 'Rejected' && (
+                            <span> ({item.reason ? item.reason : '-'})</span>
+                          )}
+                        </>
                       ) : (
                         renderCell(item[column.key])
                       )}

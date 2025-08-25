@@ -43,6 +43,11 @@ const ConsultancySchema = new mongoose.Schema({
         type: String,
         maxlength: 1000,
         required: true
+    },
+    reason: {
+        type: String,
+        default: '',
+        maxlength: 1000
     }
 }, {
     timestamps: true, // Adds createdAt and updatedAt

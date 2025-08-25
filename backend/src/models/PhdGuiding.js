@@ -32,6 +32,12 @@ const PhdGuidingSchema = new mongoose.Schema({
     },
     path: {
         type: String,
+        maxlength: 1000,
+        required: true
+    },
+    reason: {
+        type: String,
+        default: '',
         maxlength: 1000
     }
 }, {

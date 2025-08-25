@@ -25,6 +25,7 @@ export default function QualificationsPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [selectedQualification, setSelectedQualification] = useState(null);
   const [actionType, setActionType] = useState('');
+  const [reason, setReason] = useState('');
 
   // Fetch qualifications data for incharge
   useEffect(() => {
@@ -179,6 +180,7 @@ export default function QualificationsPage() {
     const openConfirmDialog = (qualification, action) => {
     setSelectedQualification(qualification);
     setActionType(action);
+    setReason(''); // Reset reason when opening dialog
     setShowConfirmDialog(true);
   };
 
@@ -190,14 +192,21 @@ export default function QualificationsPage() {
 
   const handleStatusChange = async () => {
     try {
-      // console.log('slected',selectedQualification._id)
+      // For rejections, require a reason
+      if (actionType === 'reject' && !reason.trim()) {
+        toast.error('Please provide a reason for rejection');
+        return;
+      }
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/qualifications/${selectedQualification._id}/status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ status: actionType === 'accept' ? 'Accepted' : 'Rejected' })
+        body: JSON.stringify({ 
+          status: actionType === 'accept' ? 'Accepted' : 'Rejected',
+          reason: actionType === 'reject' ? reason : undefined
+        })
       });
 
       if (!response.ok) {
@@ -609,6 +618,21 @@ export default function QualificationsPage() {
               <h3 className="text-lg font-bold text-brand-primary mb-4">
                 Confirm {actionType === 'accept' ? 'Acceptance' : 'Rejection'}
               </h3>
+              {actionType === 'reject' && (
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-brand-primary mb-2">
+                    Reason for Rejection <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="Please provide a reason for rejecting this award"
+                    className="w-full p-3 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition-colors text-gray-900 placeholder-gray-500"
+                    rows="2"
+                    required
+                  />
+                </div>
+              )}
               <p className="text-gray-600 mb-6">
                 Are you sure you want to {actionType} this qualification? This action cannot be undone.
               </p>

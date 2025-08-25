@@ -147,7 +147,7 @@ router.get('/', auth, async (req, res) => {
 router.put('/:id/status', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, reason } = req.body;
     
     // Validate status
     if (!['Pending', 'Accepted', 'Rejected'].includes(status)) {
@@ -159,6 +159,11 @@ router.put('/:id/status', auth, async (req, res) => {
       return res.status(403).json({ error: 'Permission denied' });
     }
     
+    // If rejected, require a reason
+    if (status === 'Rejected' && !reason) {
+      return res.status(400).json({ error: 'Reason is required for rejection' });
+    }
+
     // If user is incharge, verify the seminar belongs to their department
     if (req.user.role === 'incharge') {
       const seminar = await Seminar.findById(id);
@@ -172,10 +177,18 @@ router.put('/:id/status', auth, async (req, res) => {
         return res.status(403).json({ error: 'You can only update seminars from your department' });
       }
     }
-    
+
+    // Prepare update object
+    const updateData = { status };
+    if (status === 'Rejected') {
+      updateData.reason = reason;
+    } else {
+      updateData.reason = ''; // Clear reason if not rejected
+    }
+
     const updatedSeminar = await Seminar.findByIdAndUpdate(
       id,
-      { status },
+      updateData,
       { new: true }
     );
     
