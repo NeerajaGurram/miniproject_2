@@ -225,30 +225,52 @@ router.put('/:id/status', auth, async (req, res) => {
 });
 
 // GET route to fetch pending count for incharge users
-router.get('/pending-count', auth, async (req, res) => {
+router.get('/researchgrant-counts', auth, async (req, res) => {
   try {
     // Only incharge users can access this endpoint
     if (req.user.role !== 'incharge') {
-      return res.status(403).json({ error: 'Access denied. Only incharge users can view pending counts.' });
+      return res.status(403).json({ error: 'Access denied. Only incharge users can view researchgrant counts.' });
     }
-    
-    // Get faculty in the same department as incharge
-    const facultyInDepartment = await User.find({ 
-      department: req.user.department, 
-      role: 'faculty' 
-    }).select('empId');
-    
+
+    const { branch } = req.query;
+
+    // Build base query for faculty in the same department
+    const facultyQuery = {
+      department: req.user.department,
+      role: 'faculty'
+    };
+
+    // If branch is provided, add it to the query
+    if (branch) {
+      facultyQuery.branch = branch;
+    }
+
+    // Get faculty empIds
+    const facultyInDepartment = await User.find(facultyQuery).select('empId');
     const facultyEmpIds = facultyInDepartment.map(f => f.empId);
 
-    // Count pending research grants for faculty in the incharge's department
-    const pendingCount = await ResearchGrant.countDocuments({
-      empId: { $in: facultyEmpIds },
-      status: 'Pending'
+    // Build base researchgrant query
+    const researchgrantQuery = {
+      empId: { $in: facultyEmpIds }
+    };
+
+    // Count researchgrants by status
+    const [totalCount, acceptedCount, pendingCount, rejectedCount] = await Promise.all([
+      ResearchGrant.countDocuments(researchgrantQuery),
+      ResearchGrant.countDocuments({ ...researchgrantQuery, status: 'Accepted' }),
+      ResearchGrant.countDocuments({ ...researchgrantQuery, status: 'Pending' }),
+      ResearchGrant.countDocuments({ ...researchgrantQuery, status: 'Rejected' })
+    ]);
+
+    res.json({
+      total: totalCount,
+      accepted: acceptedCount,
+      pending: pendingCount,
+      rejected: rejectedCount
     });
     
-    res.json({ count: pendingCount });
   } catch (error) {
-    console.error('Error fetching pending research grants count:', error);
+    console.error('Error fetching researchgrant counts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

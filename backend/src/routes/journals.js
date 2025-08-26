@@ -229,30 +229,52 @@ router.put('/:id/status', auth, async (req, res) => {
 });
 
 // GET route to fetch pending count for incharge users
-router.get('/pending-count', auth, async (req, res) => {
+router.get('/journal-counts', auth, async (req, res) => {
   try {
     // Only incharge users can access this endpoint
     if (req.user.role !== 'incharge') {
-      return res.status(403).json({ error: 'Access denied. Only incharge users can view pending counts.' });
+      return res.status(403).json({ error: 'Access denied. Only incharge users can view journal counts.' });
     }
-    
-    // Get faculty in the same department as incharge
-    const facultyInDepartment = await User.find({ 
-      department: req.user.department, 
-      role: 'faculty' 
-    }).select('empId');
-    
+
+    const { branch } = req.query;
+
+    // Build base query for faculty in the same department
+    const facultyQuery = {
+      department: req.user.department,
+      role: 'faculty'
+    };
+
+    // If branch is provided, add it to the query
+    if (branch) {
+      facultyQuery.branch = branch;
+    }
+
+    // Get faculty empIds
+    const facultyInDepartment = await User.find(facultyQuery).select('empId');
     const facultyEmpIds = facultyInDepartment.map(f => f.empId);
 
-    // Count pending journals for faculty in the incharge's department
-    const pendingCount = await Journal.countDocuments({
-      empId: { $in: facultyEmpIds },
-      status: 'Pending'
+    // Build base journal query
+    const journalQuery = {
+      empId: { $in: facultyEmpIds }
+    };
+
+    // Count journals by status
+    const [totalCount, acceptedCount, pendingCount, rejectedCount] = await Promise.all([
+      Journal.countDocuments(journalQuery),
+      Journal.countDocuments({ ...journalQuery, status: 'Accepted' }),
+      Journal.countDocuments({ ...journalQuery, status: 'Pending' }),
+      Journal.countDocuments({ ...journalQuery, status: 'Rejected' })
+    ]);
+
+    res.json({
+      total: totalCount,
+      accepted: acceptedCount,
+      pending: pendingCount,
+      rejected: rejectedCount
     });
     
-    res.json({ count: pendingCount });
   } catch (error) {
-    console.error('Error fetching pending journals count:', error);
+    console.error('Error fetching journal counts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

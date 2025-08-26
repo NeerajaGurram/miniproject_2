@@ -1,170 +1,352 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { facultyAPI } from '../lib/api';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { useAuth } from '../lib/auth';
+import { Download } from 'lucide-react';
 
-const tabs = [
-  { id: 'summary', label: 'Summary' },
-  { id: 'seminar', label: 'S/C/W/FDP/G' },
-  { id: 'phd', label: 'PhD' },
-  { id: 'phdguiding', label: 'PhD Guiding' },
-  { id: 'journals', label: 'Journals' },
-  { id: 'books', label: 'Books' },
-  { id: 'journaledited', label: 'Journal Edited' },
-  { id: 'researchgrant', label: 'Research Grants' },
-  { id: 'patents', label: 'Patents' },
-  { id: 'qualification', label: 'Qualification' },
-  { id: 'visits', label: 'Visits' },
-  { id: 'awards', label: 'Awards' },
-  { id: 'membership', label: 'Membership' },
-  { id: 'consultancy', label: 'Consultancy' },
-  { id: 'infrastructure', label: 'Infrastructure' },
-];
+const researchTypeLabels = {
+  all: 'Summary',
+  seminar: 'S/C/W/FDP/G',
+  phd: 'PhD',
+  phdguiding: 'PhD Guiding',
+  journal: 'Journals',
+  book: 'Books',
+  journaledited: 'Journal Edited',
+  researchgrant: 'Research Grants',
+  patent: 'Patents',
+  qualification: 'Qualification',
+  visit: 'Visits',
+  award: 'Awards',
+  membership: 'Membership',
+  consultancy: 'Consultancy',
+  infrastructure: 'Infrastructure',
+};
 
-export default function DepartmentOverview() {
-  const [activeTab, setActiveTab] = useState('summary');
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [chartData, setChartData] = useState([]);
-  const [facultyData, setFacultyData] = useState([]);
-  const [loading, setLoading] = useState(false);
+// Map frontend type keys to backend report type values
+const typeToReportMap = {
+  seminar: 'S/C/W/FDP/G',
+  phd: 'PHD',
+  phdguiding: 'PHD-GUIDING',
+  journal: 'JOURNALS',
+  book: 'BOOKS',
+  journaledited: 'JOURNAL-EDITED',
+  researchgrant: 'RESEARCH-GRANTS',
+  patent: 'PATENTS',
+  qualification: 'QUALIFICATIONS',
+  visit: 'VISITS',
+  award: 'AWARDS',
+  membership: 'MEMBERSHIP',
+  consultancy: 'CONSULTANCY',
+  infrastructure: 'INFRASTRUCTURE',
+};
 
-  useEffect(() => {
-    loadData();
-  }, [activeTab, selectedYear]);
+export default function DepartmentDashboard() {
+  const [allCounts, setAllCounts] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { user, token } = useAuth();
+  const [selectedType, setSelectedType] = useState('all');
 
-  const loadData = async () => {
+  // Fetch all counts in a single API call
+  const fetchAllCounts = async () => {
     try {
       setLoading(true);
-      let res;
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/counts`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      if (activeTab === 'summary') {
-        // Department overview
-        res = await facultyAPI.getDepartmentOverview('CSE', { year: selectedYear });
-        const stats = res.data.data?.researchStats || [];
-        setChartData(
-          stats.map((stat) => ({
-            type: stat._id,
-            Approved: stat.approved,
-            Pending: stat.pending,
-            Rejected: stat.rejected,
-          }))
-        );
-        setFacultyData(res.data.data?.facultyStats || []); // backend should return faculty summary
-      } else {
-        // Specific type
-        res = await facultyAPI.getStatsByType(activeTab, { year: selectedYear });
-        const stats = res.data.data?.department || [];
-        setChartData(
-          stats.map((row) => ({
-            year: row._id,
-            Approved: row.approved,
-            Pending: row.pending,
-            Rejected: row.rejected,
-          }))
-        );
-        setFacultyData(res.data.data?.faculty || []); // backend should return faculty-level breakdown
+      if (!res.ok) {
+        throw new Error(`Failed to fetch counts, status: ${res.status}`);
       }
+
+      const data = await res.json();
+      setAllCounts(data);
     } catch (err) {
-      console.error('Error loading department data:', err);
-      toast.error('Failed to load department data');
+      console.error('Error fetching counts:', err);
+      toast.error('Failed to load department statistics');
     } finally {
       setLoading(false);
     }
   };
 
+  // Fetch data on component mount
+  useEffect(() => {
+    if (token) {
+      fetchAllCounts();
+    }
+  }, [token]);
+
+  // Calculate summary statistics
+  const getSummaryStats = () => {
+    if (!allCounts) return null;
+    
+    let total = 0;
+    let accepted = 0;
+    let pending = 0;
+    let rejected = 0;
+    
+    Object.values(allCounts).forEach(data => {
+      total += data.total || 0;
+      accepted += data.accepted || 0;
+      pending += data.pending || 0;
+      rejected += data.rejected || 0;
+    });
+    
+    return { total, accepted, pending, rejected };
+  };
+
+  const summaryStats = getSummaryStats();
+
+  // Get the current data based on selected type
+  const getCurrentData = () => {
+    if (selectedType === 'all') {
+      return summaryStats;
+    }
+    
+    // Map selected type to the correct data key
+    const keyMap = {
+      seminar: 'seminars',
+      phd: 'phds',
+      phdguiding: 'phdsGuiding',
+      journal: 'journals',
+      book: 'books',
+      journaledited: 'journalsEdited',
+      researchgrant: 'researchGrants',
+      patent: 'patents',
+      qualification: 'qualifications',
+      visit: 'visits',
+      award: 'awards',
+      membership: 'memberships',
+      consultancy: 'consultancies',
+      infrastructure: 'infrastructures',
+    };
+    
+    const dataKey = keyMap[selectedType];
+    return allCounts ? allCounts[dataKey] : null;
+  };
+
+  // Download Excel for a specific research type
+  const downloadExcel = async (type) => {
+    try {
+      const reportType = typeToReportMap[type];
+      if (!reportType) {
+        toast.error('Download not available for this type');
+        return;
+      }
+
+      const params = new URLSearchParams({ 
+        type: reportType, 
+        format: 'excel',
+        branch: user?.branch || ''
+      });
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/data?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download report');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${reportType}_report.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Download started');
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error(`Download error: ${err.message}`);
+    }
+  };
+
+  const currentData = getCurrentData();
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-lg shadow p-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">CSE Department Overview</h1>
-          <p className="text-gray-600 mt-1">
-            Research statistics and faculty performance
-          </p>
+      {/* Header Section */}
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">{user?.department} Department Dashboard</h1>
+            <p className="text-gray-600 mt-1">Statistics across all activity types</p>
+            {user && user.branch && (
+              <p className="text-sm text-gray-500 mt-2">
+                Filtered by branch: {user.branch}
+              </p>
+            )}
+          </div>
+          
+          {summaryStats && (
+            <div className="mt-4 md:mt-0 grid grid-cols-2 md:grid-cols-4 gap-2">
+              <div className="p-2 bg-blue-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600">Total</p>
+                <p className="text-lg font-bold text-blue-700">{summaryStats.total}</p>
+              </div>
+              <div className="p-2 bg-green-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600">Accepted</p>
+                <p className="text-lg font-bold text-green-700">{summaryStats.accepted}</p>
+              </div>
+              <div className="p-2 bg-yellow-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600">Pending</p>
+                <p className="text-lg font-bold text-yellow-700">{summaryStats.pending}</p>
+              </div>
+              <div className="p-2 bg-red-50 rounded-lg text-center">
+                <p className="text-xs text-gray-600">Rejected</p>
+                <p className="text-lg font-bold text-red-700">{summaryStats.rejected}</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Research Type Selector */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Research Overview</h2>
         <div className="flex flex-wrap gap-2">
-          {tabs.map((tab) => (
+          {Object.entries(researchTypeLabels).map(([type, label]) => (
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              key={type}
+              onClick={() => setSelectedType(type)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center ${
+                selectedType === type
+                  ? 'bg-brand-accent text-white'
+                  : 'bg-gray-100 text-brand-primary hover:bg-gray-200'
               }`}
             >
-              {tab.label}
+              {label}
             </button>
           ))}
         </div>
       </div>
-
-      {/* Chart */}
+      
+      {/* Content Section */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          {tabs.find((t) => t.id === activeTab)?.label} Statistics
-        </h3>
-
         {loading ? (
-          <div className="flex items-center justify-center min-h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <div className="flex justify-center items-center h-40">
+            <p className="text-gray-500">Loading department statistics...</p>
           </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={chartData}>
-              <XAxis dataKey={activeTab === 'summary' ? 'type' : 'year'} />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="Approved" fill="#16a34a" />
-              <Bar dataKey="Pending" fill="#eab308" />
-              <Bar dataKey="Rejected" fill="#dc2626" />
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </div>
-
-      {/* Faculty Performance */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Faculty Performance – {tabs.find((t) => t.id === activeTab)?.label}
-        </h3>
-
-        {facultyData.length === 0 ? (
-          <p className="text-gray-500 text-sm">No faculty data available.</p>
-        ) : (
-          <div className="divide-y divide-gray-200">
-            {facultyData.map((f) => (
-              <div
-                key={f._id}
-                className="flex items-center justify-between py-3 hover:bg-gray-50 px-2"
-              >
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{f.name}</p>
-                  <p className="text-xs text-gray-500">{f.email}</p>
-                </div>
-                <div className="flex space-x-4 text-sm">
-                  <span className="text-green-600">✓ {f.approved}</span>
-                  <span className="text-yellow-600">⏳ {f.pending}</span>
-                  <span className="text-red-600">✗ {f.rejected}</span>
+        ) : currentData ? (
+          <div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center cursor-pointer" onClick={() => downloadExcel(selectedType)}>
+              {researchTypeLabels[selectedType]} Statistics
+            </h3>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-4 bg-blue-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Total</p>
+                <p className="text-2xl font-bold text-blue-700">{currentData.total || 0}</p>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Accepted</p>
+                <p className="text-2xl font-bold text-green-700">{currentData.accepted || 0}</p>
+              </div>
+              <div className="p-4 bg-yellow-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Pending</p>
+                <p className="text-2xl font-bold text-yellow-700">{currentData.pending || 0}</p>
+              </div>
+              <div className="p-4 bg-red-50 rounded-lg text-center">
+                <p className="text-sm text-gray-600">Rejected</p>
+                <p className="text-2xl font-bold text-red-700">{currentData.rejected || 0}</p>
+              </div>
+            </div>
+            
+            {/* Summary Table for all research types */}
+            {selectedType === 'all' && allCounts && (
+              <div className="mt-8">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">Detailed Research Statistics</h4>
+                <div className="overflow-x-auto rounded-lg border border-gray-200">
+                  <table className="min-w-full bg-white">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="py-3 px-4 text-left text-sm font-medium text-gray-700">Research Type</th>
+                        <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Total</th>
+                        <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Accepted</th>
+                        <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Pending</th>
+                        <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Rejected</th>
+                        {/* <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Actions</th> */}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {Object.entries({
+                        seminar: 'seminars',
+                        phd: 'phds',
+                        phdguiding: 'phdsGuiding',
+                        journal: 'journals',
+                        book: 'books',
+                        journaledited: 'journalsEdited',
+                        researchgrant: 'researchGrants',
+                        patent: 'patents',
+                        qualification: 'qualifications',
+                        visit: 'visits',
+                        award: 'awards',
+                        membership: 'memberships',
+                        consultancy: 'consultancies',
+                        infrastructure: 'infrastructures',
+                      }).map(([typeKey, dataKey]) => {
+                        const data = allCounts[dataKey] || {};
+                        return (
+                          <tr key={typeKey} className="hover:bg-gray-50 cursor-pointer" onClick={() => downloadExcel(typeKey)}>
+                            <td className="py-3 px-4 text-sm font-medium text-gray-900 cursor-pointer">
+                              {researchTypeLabels[typeKey]}
+                            </td>
+                            <td className="py-3 px-4 text-center text-sm text-gray-700">{data.total || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-green-600">{data.accepted || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-yellow-600">{data.pending || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-red-600">{data.rejected || 0}</td>
+                            {/* <td className="py-3 px-4 text-center">
+                              <button
+                                onClick={() => downloadExcel(typeKey)}
+                                className="inline-flex items-center px-3 py-1 bg-brand-secondary text-white text-sm rounded-md hover:bg-brand-accent transition-colors"
+                                title="Download Excel Report"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                            </td> */}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            ))}
+            )}
+            
+            {/* Additional details section for specific types */}
+            {selectedType !== 'all' && (
+              <div className="mt-8">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  {researchTypeLabels[selectedType]} Details
+                </h4>
+                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                  <p className="text-gray-500 text-sm">
+                    Detailed view and management options for {researchTypeLabels[selectedType].toLowerCase()} would appear here.
+                  </p>
+                  <button 
+                    onClick={() => downloadExcel(selectedType)}
+                    className="mt-3 px-4 py-2 bg-brand-accent text-white rounded-md text-sm font-medium hover:bg-brand-primary transition-colors flex items-center mx-auto"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download {researchTypeLabels[selectedType]} Report
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center h-40">
+            <p className="text-gray-500">No data available for this category</p>
           </div>
         )}
       </div>

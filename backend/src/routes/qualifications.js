@@ -222,30 +222,52 @@ router.put('/:id/status', auth, async (req, res) => {
 });
 
 // GET route to fetch pending count for incharge users
-router.get('/pending-count', auth, async (req, res) => {
+router.get('/qualification-counts', auth, async (req, res) => {
   try {
     // Only incharge users can access this endpoint
     if (req.user.role !== 'incharge') {
-      return res.status(403).json({ error: 'Access denied. Only incharge users can view pending counts.' });
+      return res.status(403).json({ error: 'Access denied. Only incharge users can view qualification counts.' });
     }
-    
-    // Get faculty in the same department as incharge
-    const facultyInDepartment = await User.find({ 
-      department: req.user.department, 
-      role: 'faculty' 
-    }).select('empId');
-    
+
+    const { branch } = req.query;
+
+    // Build base query for faculty in the same department
+    const facultyQuery = {
+      department: req.user.department,
+      role: 'faculty'
+    };
+
+    // If branch is provided, add it to the query
+    if (branch) {
+      facultyQuery.branch = branch;
+    }
+
+    // Get faculty empIds
+    const facultyInDepartment = await User.find(facultyQuery).select('empId');
     const facultyEmpIds = facultyInDepartment.map(f => f.empId);
 
-    // Count pending qualifications for faculty in the incharge's department
-    const pendingCount = await Qualification.countDocuments({
-      empId: { $in: facultyEmpIds },
-      status: 'Pending'
+    // Build base qualification query
+    const qualificationQuery = {
+      empId: { $in: facultyEmpIds }
+    };
+
+    // Count qualifications by status
+    const [totalCount, acceptedCount, pendingCount, rejectedCount] = await Promise.all([
+      Qualification.countDocuments(qualificationQuery),
+      Qualification.countDocuments({ ...qualificationQuery, status: 'Accepted' }),
+      Qualification.countDocuments({ ...qualificationQuery, status: 'Pending' }),
+      Qualification.countDocuments({ ...qualificationQuery, status: 'Rejected' })
+    ]);
+
+    res.json({
+      total: totalCount,
+      accepted: acceptedCount,
+      pending: pendingCount,
+      rejected: rejectedCount
     });
     
-    res.json({ count: pendingCount });
   } catch (error) {
-    console.error('Error fetching pending qualifications count:', error);
+    console.error('Error fetching qualification counts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

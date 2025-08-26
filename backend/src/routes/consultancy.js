@@ -220,30 +220,52 @@ router.put('/:id/status', auth, async (req, res) => {
 });
 
 // GET route to fetch pending count for incharge users
-router.get('/pending-count', auth, async (req, res) => {
+router.get('/consultancy-counts', auth, async (req, res) => {
   try {
     // Only incharge users can access this endpoint
     if (req.user.role !== 'incharge') {
-      return res.status(403).json({ error: 'Access denied. Only incharge users can view pending counts.' });
+      return res.status(403).json({ error: 'Access denied. Only incharge users can view consultancy counts.' });
     }
-    
-    // Get faculty in the same department as incharge
-    const facultyInDepartment = await User.find({ 
-      department: req.user.department, 
-      role: 'faculty' 
-    }).select('empId');
-    
+
+    const { branch } = req.query;
+
+    // Build base query for faculty in the same department
+    const facultyQuery = {
+      department: req.user.department,
+      role: 'faculty'
+    };
+
+    // If branch is provided, add it to the query
+    if (branch) {
+      facultyQuery.branch = branch;
+    }
+
+    // Get faculty empIds
+    const facultyInDepartment = await User.find(facultyQuery).select('empId');
     const facultyEmpIds = facultyInDepartment.map(f => f.empId);
-    
-    // Count pending consultancies for faculty in the incharge's department
-    const pendingCount = await Consultancy.countDocuments({
-      empId: { $in: facultyEmpIds },
-      status: 'Pending'
+
+    // Build base consultancy query
+    const consultancyQuery = {
+      empId: { $in: facultyEmpIds }
+    };
+
+    // Count consultancies by status
+    const [totalCount, acceptedCount, pendingCount, rejectedCount] = await Promise.all([
+      Consultancy.countDocuments(consultancyQuery),
+      Consultancy.countDocuments({ ...consultancyQuery, status: 'Accepted' }),
+      Consultancy.countDocuments({ ...consultancyQuery, status: 'Pending' }),
+      Consultancy.countDocuments({ ...consultancyQuery, status: 'Rejected' })
+    ]);
+
+    res.json({
+      total: totalCount,
+      accepted: acceptedCount,
+      pending: pendingCount,
+      rejected: rejectedCount
     });
     
-    res.json({ count: pendingCount });
   } catch (error) {
-    console.error('Error fetching pending consultancies count:', error);
+    console.error('Error fetching consultancy counts:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

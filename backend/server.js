@@ -92,6 +92,7 @@ app.use('/api/membership', membershipRoutes);
 app.use('/api/consultancy', consultancyRoutes);
 app.use('/api/infrastructure', infrastructureRoutes);
 app.use('/api/s-c-w-fdp-g', require('./src/routes/s-c-w-fdp-g'));
+app.use('/api/counts', require('./src/routes/counts'));
 
 
 app.get("/", (req, res) => {
