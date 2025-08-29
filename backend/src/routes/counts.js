@@ -37,8 +37,8 @@ router.get('/', auth, async (req, res) => {
     else if (req.user.role === 'admin' && department) {
       facultyQuery.department = department;
     }
-    else {
-      // If user is neither admin nor incharge, restrict to their own department
+    // If user is faculty, restrict to their own data
+    else if (req.user.role === 'faculty') {
       facultyQuery.department = req.user.department;
     }
 

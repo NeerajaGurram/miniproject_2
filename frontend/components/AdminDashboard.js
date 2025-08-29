@@ -229,7 +229,7 @@ export default function AdminDashboard() {
       const params = new URLSearchParams({ 
         type: reportType, 
         format: 'excel',
-        ...(filters.department && { department: filters.department }),
+        ...(filters.department && { branch: filters.department }), 
         ...(filters.academicYear && { year: filters.academicYear }) 
       });
       
