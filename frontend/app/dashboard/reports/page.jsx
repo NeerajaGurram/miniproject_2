@@ -45,7 +45,7 @@ export default function ReportsPage() {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const years = await response.json();
-        setYearOptions(years);
+        setYearOptions(years.reverse());
       } catch (err) {
         console.error('Failed to load academic years:', err);
       }

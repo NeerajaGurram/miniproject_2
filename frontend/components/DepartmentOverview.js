@@ -43,11 +43,36 @@ const typeToReportMap = {
 
 export default function DepartmentDashboard() {
   const [allCounts, setAllCounts] = useState(null);
+  const [filteredCounts, setFilteredCounts] = useState(null);
   const [loading, setLoading] = useState(true);
   const { user, token } = useAuth();
   const [selectedType, setSelectedType] = useState('all');
+  const [filters, setFilters] = useState({
+    academicYear: ''
+  });
+  const [yearOptions, setYearOptions] = useState([]);
+  
+  useEffect(() => {
+    const fetchYears = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/academic-years`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const years = await response.json();
+          setYearOptions(years.reverse());
+        }
+      } catch (err) {
+        console.error('Failed to load academic years:', err);
+      }
+    };
 
-  // Fetch all counts in a single API call
+    if (token) {
+      fetchYears();
+    }
+  }, [token]);
+
+  // Fetch all counts (without filters for the top summary)
   const fetchAllCounts = async () => {
     try {
       setLoading(true);
@@ -73,6 +98,28 @@ export default function DepartmentDashboard() {
     }
   };
 
+  // Fetch filtered counts for the detailed view
+  const fetchFilteredCounts = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filters.academicYear) params.append('academic_year', filters.academicYear);
+      
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/counts?${params}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setFilteredCounts(data);
+      }
+    } catch (err) {
+      console.error('Error fetching filtered counts:', err);
+    }
+  };
+
   // Fetch data on component mount
   useEffect(() => {
     if (token) {
@@ -80,7 +127,16 @@ export default function DepartmentDashboard() {
     }
   }, [token]);
 
-  // Calculate summary statistics
+  // Fetch filtered data when filters change
+  useEffect(() => {
+    if (token && filters.academicYear) {
+      fetchFilteredCounts();
+    } else {
+      setFilteredCounts(null);
+    }
+  }, [token, filters]);
+
+  // Calculate summary statistics (always from allCounts, not filtered)
   const getSummaryStats = () => {
     if (!allCounts) return null;
     
@@ -101,9 +157,25 @@ export default function DepartmentDashboard() {
 
   const summaryStats = getSummaryStats();
 
-  // Get the current data based on selected type
+  // Get the current data based on selected type (uses filtered data if available)
   const getCurrentData = () => {
     if (selectedType === 'all') {
+      // For summary view, calculate from filtered or all counts
+      if (filteredCounts) {
+        let total = 0;
+        let accepted = 0;
+        let pending = 0;
+        let rejected = 0;
+        
+        Object.values(filteredCounts).forEach(data => {
+          total += data.total || 0;
+          accepted += data.accepted || 0;
+          pending += data.pending || 0;
+          rejected += data.rejected || 0;
+        });
+        
+        return { total, accepted, pending, rejected };
+      }
       return summaryStats;
     }
     
@@ -126,10 +198,12 @@ export default function DepartmentDashboard() {
     };
     
     const dataKey = keyMap[selectedType];
-    return allCounts ? allCounts[dataKey] : null;
+    // Use filtered data if available, otherwise use all data
+    const dataSource = filteredCounts || allCounts;
+    return dataSource ? dataSource[dataKey] : null;
   };
 
-  // Download Excel for a specific research type
+  // Download Excel for a specific research type with filters
   const downloadExcel = async (type) => {
     try {
       const reportType = typeToReportMap[type];
@@ -141,7 +215,8 @@ export default function DepartmentDashboard() {
       const params = new URLSearchParams({ 
         type: reportType, 
         format: 'excel',
-        branch: user?.branch || ''
+        branch: user?.branch || '',
+        ...(filters.academicYear && { year: filters.academicYear })
       });
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/data?${params}`, {
@@ -158,7 +233,7 @@ export default function DepartmentDashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_report.xlsx`;
+      a.download = `${reportType}_${filters.academicYear || 'all'}_report.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -172,15 +247,16 @@ export default function DepartmentDashboard() {
   };
 
   const currentData = getCurrentData();
+  const displayData = filteredCounts || allCounts;
 
   return (
     <div className="space-y-6">
-      {/* Header Section */}
+      {/* Header Section - Always shows overall stats, not filtered */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{user?.department} Department Dashboard</h1>
-            <p className="text-gray-600 mt-1">Statistics across all activity types</p>
+            <p className="text-gray-600 mt-1">Overall statistics across all activity types</p>
             {user && user.branch && (
               <p className="text-sm text-gray-500 mt-2">
                 Filtered by branch: {user.branch}
@@ -211,9 +287,38 @@ export default function DepartmentDashboard() {
         </div>
       </div>
 
-      {/* Research Type Selector */}
+      {/* Research Type Selector with Year Filter */}
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Research Overview</h2>
+        
+        {/* Year Filter */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Academic Year</label>
+            <select
+              value={filters.academicYear}
+              onChange={(e) => setFilters(prev => ({ ...prev, academicYear: e.target.value }))}
+              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-accent focus:border-transparent"
+            >
+              <option value="">All Years</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Clear Filter Button */}
+          <div className="flex items-end">
+            <button
+              onClick={() => setFilters({ academicYear: '' })}
+              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+            >
+              Clear Filter
+            </button>
+          </div>
+        </div>
+
+        {/* Research Type Buttons */}
         <div className="flex flex-wrap gap-2">
           {Object.entries(researchTypeLabels).map(([type, label]) => (
             <button
@@ -231,7 +336,7 @@ export default function DepartmentDashboard() {
         </div>
       </div>
       
-      {/* Content Section */}
+      {/* Content Section - Shows filtered data */}
       <div className="bg-white rounded-lg shadow p-6">
         {loading ? (
           <div className="flex justify-center items-center h-40">
@@ -241,6 +346,7 @@ export default function DepartmentDashboard() {
           <div>
             <h3 className="text-xl font-semibold text-gray-900 mb-6 flex items-center cursor-pointer" onClick={() => downloadExcel(selectedType)}>
               {researchTypeLabels[selectedType]} Statistics
+              {filters.academicYear && ` (${filters.academicYear})`}
             </h3>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -263,7 +369,7 @@ export default function DepartmentDashboard() {
             </div>
             
             {/* Summary Table for all research types */}
-            {selectedType === 'all' && allCounts && (
+            {selectedType === 'all' && displayData && (
               <div className="mt-8">
                 <h4 className="text-lg font-medium text-gray-900 mb-4">Detailed Research Statistics</h4>
                 <div className="overflow-x-auto rounded-lg border border-gray-200">
@@ -275,7 +381,6 @@ export default function DepartmentDashboard() {
                         <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Accepted</th>
                         <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Pending</th>
                         <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Rejected</th>
-                        {/* <th className="py-3 px-4 text-center text-sm font-medium text-gray-700">Actions</th> */}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -295,7 +400,7 @@ export default function DepartmentDashboard() {
                         consultancy: 'consultancies',
                         infrastructure: 'infrastructures',
                       }).map(([typeKey, dataKey]) => {
-                        const data = allCounts[dataKey] || {};
+                        const data = displayData[dataKey] || {};
                         return (
                           <tr key={typeKey} className="hover:bg-gray-50 cursor-pointer" onClick={() => downloadExcel(typeKey)}>
                             <td className="py-3 px-4 text-sm font-medium text-gray-900 cursor-pointer">
@@ -305,15 +410,6 @@ export default function DepartmentDashboard() {
                             <td className="py-3 px-4 text-center text-sm text-green-600">{data.accepted || 0}</td>
                             <td className="py-3 px-4 text-center text-sm text-yellow-600">{data.pending || 0}</td>
                             <td className="py-3 px-4 text-center text-sm text-red-600">{data.rejected || 0}</td>
-                            {/* <td className="py-3 px-4 text-center">
-                              <button
-                                onClick={() => downloadExcel(typeKey)}
-                                className="inline-flex items-center px-3 py-1 bg-brand-secondary text-white text-sm rounded-md hover:bg-brand-accent transition-colors"
-                                title="Download Excel Report"
-                              >
-                                <Download className="h-4 w-4" />
-                              </button>
-                            </td> */}
                           </tr>
                         );
                       })}

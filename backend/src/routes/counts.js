@@ -17,33 +17,6 @@ const Seminar = require('../models/Seminar');
 const Visit = require('../models/Visit');
 const User = require('../models/User'); 
 
-// router.get('/', auth, async (req, res) => {
-//   try {
-//     // Only incharge users can access this endpoint
-//     if (req.user.role !== 'incharge') {
-//       return res.status(403).json({ error: 'Access denied. Only incharge users can view counts.' });
-//     }
-
-//     const { branch } = req.query;
-
-//     // Build base query for faculty in the same department
-//     if (req.user.role === 'incharge') {
-//       facultyQuery.department = req.user.department;
-//     } 
-
-//     // If branch is provided, add it to the query
-//     if (branch) {
-//       facultyQuery.branch = branch;
-//     }
-
-//     // Get faculty empIds
-//     const facultyInDepartment = await User.find(facultyQuery).select('empId');
-//     const facultyEmpIds = facultyInDepartment.map(f => f.empId);
-
-//     // Build base query for all collections
-//     const baseQuery = {
-//       empId: { $in: facultyEmpIds }
-//     };
 router.get('/', auth, async (req, res) => {
   try {
     // Only admin and incharge users can access this endpoint
@@ -51,7 +24,7 @@ router.get('/', auth, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Only admin and incharge users can view counts.' });
     }
 
-    const { branch, department } = req.query;
+    const { branch, department, academic_year } = req.query;
 
     // Build base query for faculty
     const facultyQuery = { role: 'faculty' };
@@ -78,6 +51,11 @@ router.get('/', auth, async (req, res) => {
     const baseQuery = {
       empId: { $in: facultyEmpIds }
     };
+
+    // Add academic year filter if provided
+    if (academic_year) {
+      baseQuery.academic_year = academic_year;
+    }
 
     // Count documents across all collections with status breakdown
     const [
