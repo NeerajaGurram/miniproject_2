@@ -20,9 +20,9 @@ const User = require('../models/User');
 router.get('/', auth, async (req, res) => {
   try {
     // Only admin and incharge users can access this endpoint
-    if (req.user.role !== 'admin' && req.user.role !== 'incharge') {
-      return res.status(403).json({ error: 'Access denied. Only admin and incharge users can view counts.' });
-    }
+    // if (req.user.role !== 'admin' && req.user.role !== 'incharge') {
+    //   return res.status(403).json({ error: 'Access denied. Only admin and incharge users can view counts.' });
+    // }
 
     const { branch, department, academic_year } = req.query;
 
@@ -37,6 +37,10 @@ router.get('/', auth, async (req, res) => {
     else if (req.user.role === 'admin' && department) {
       facultyQuery.department = department;
     }
+    else {
+      // If user is neither admin nor incharge, restrict to their own department
+      facultyQuery.department = req.user.department;
+    }
 
     // If branch is provided, add it to the query
     if (branch) {
@@ -44,8 +48,16 @@ router.get('/', auth, async (req, res) => {
     }
 
     // Get faculty empIds
-    const facultyUsers = await User.find(facultyQuery).select('empId');
-    const facultyEmpIds = facultyUsers.map(f => f.empId);
+    let facultyEmpIds;
+    if (req.user.role != 'faculty') {
+      const facultyUsers = await User.find(facultyQuery).select('empId');
+      facultyEmpIds = facultyUsers.map(f => f.empId);
+    }
+    else{
+      facultyEmpIds = [req.user.empId];
+      console.log("Faculty empId:", facultyEmpIds);
+    }
+    console.log(facultyEmpIds);
 
     // Build base query for all collections
     const baseQuery = {
