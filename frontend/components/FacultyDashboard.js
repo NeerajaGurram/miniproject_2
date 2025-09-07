@@ -150,14 +150,19 @@ export default function FacultyDashboard() {
     }
   };
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (retryCount = 0) => {
     try {
       setLoading(true);
       const response = await facultyAPI.getDashboard();
       setDashboardData(response.data.data);
     } catch (error) {
-      console.error('Dashboard load error:', error);
-      toast.error('Failed to load dashboard data');
+      if (error.response?.status === 429 && retryCount < 3) {
+        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+        setTimeout(() => loadDashboardData(retryCount + 1), delay);
+      } else {
+        console.error('Dashboard load error:', error);
+        toast.error('Failed to load dashboard data');
+      }
     } finally {
       setLoading(false);
     }

@@ -13,6 +13,7 @@ import {
   Users,
   BarChart3,
   Settings,
+  Eye,
   LogOut,
   Bell,
   Search,
@@ -27,19 +28,21 @@ import {
   ShieldCheck,
   FileEdit,
   FileSearch,
-  Lock
+  Lock,
+  TrendingUp
 } from 'lucide-react';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Change Password', href: '/dashboard/change-password', icon: Lock },
+  { name: 'View Submissions', href: '/dashboard/view-submissions', icon: Eye, FacultyOnly: true },
   { name: 'S/C/W/FDP/G', href: '/dashboard/s-c-w-fdp-g', icon: FileText },
   { name: 'PhD', href: '/dashboard/phd', icon: GraduationCap },
   { name: 'PhD Guiding', href: '/dashboard/phd-guiding', icon: ShieldCheck },
   { name: 'Journals', href: '/dashboard/journals', icon: BookOpen },
   { name: 'Books', href: '/dashboard/books', icon: FileText },
   { name: 'Journal Edited', href: '/dashboard/journal-edited', icon: FileEdit },
-  { name: 'Research Grants', href: '/dashboard/research-grants', icon: Briefcase },
+  { name: 'Research Grants', href: '/dashboard/research-grants', icon: TrendingUp },
   { name: 'Patents', href: '/dashboard/patents', icon: FileSearch },
   { name: 'Qualifications', href: '/dashboard/qualifications', icon: GraduationCap },
   { name: 'Visits', href: '/dashboard/visits', icon: Globe },
@@ -47,7 +50,7 @@ const navigation = [
   { name: 'Membership', href: '/dashboard/membership', icon: Users },
   { name: 'Consultancy', href: '/dashboard/consultancy', icon: Briefcase },
   { name: 'Infrastructure', href: '/dashboard/infrastructure', icon: Building },
-  { name: 'Review', href: '/dashboard/review', icon: BarChart3, inchargeOnly: true },
+  { name: 'Review', href: '/dashboard/review', icon: Eye, inchargeOnly: true },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
 ];
 
@@ -201,23 +204,21 @@ export default function DashboardLayout({ children }) {
           <div className="h-6 w-px bg-brand-cream lg:hidden" />
 
           <div className="flex flex-1 gap-x-4 self-stretch justify-center items-center lg:gap-x-6">
-            <Image
-              src='https://siddhartha.edu.in/wp-content/uploads/2025/05/sahe-white-logo.png'
-              alt="Profile Picture"
-              width={200}
+            <img
+              src='https://www.vrsiddhartha.ac.in/wp-content/uploads/2019/09/SAHE_Main-Header.png'
+              alt="SAHE Logo"
+              width={150}
               height={40}
-              className="h-14 w-70 rounded-lg bg-brand-primary m-1"
+              className="lg:block hidden h-16 w-full bg-brand-primary m-1"
             />
-            {/* <div className="relative flex flex-1">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <Search className="h-5 w-5 text-brand-secondary" />
-              </div>
-              <input
-                type="text"
-                className="block h-full w-full border-0 py-0 pl-10 pr-0 text-brand-primary placeholder:text-brand-secondary focus:ring-0 sm:text-sm"
-                placeholder="Search..."
-              />
-            </div> */}
+          <img
+            src='https://www.vrsiddhartha.ac.in/wp-content/uploads/2019/09/SAHE_Main-Header.png'
+            alt="SAHE Logo"
+            width={150}
+            height={40}
+            className={`lg:hidden transition-all duration-300 w-full h-8`}
+            loading="lazy"
+          />
           </div>
 
           <div className="flex items-center gap-x-4 lg:gap-x-6">

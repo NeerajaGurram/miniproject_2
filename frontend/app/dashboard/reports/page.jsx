@@ -60,7 +60,7 @@ export default function ReportsPage() {
     'S/C/W/FDP/G', 'PHD', 'PHD-GUIDING', 'JOURNALS',
     'BOOKS', 'JOURNAL-EDITED', 'RESEARCH-GRANTS', 'PATENTS',
     'QUALIFICATIONS', 'VISITS', 'AWARDS', 'MEMBERSHIP',
-    'CONSULTANCY', 'INFRASTRUCTURE', 'SUMMARY'
+    'CONSULTANCY', 'INFRASTRUCTURE',
   ];
 
   const handleChange = (e) => {

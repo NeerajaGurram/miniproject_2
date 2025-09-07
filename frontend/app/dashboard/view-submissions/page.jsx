@@ -2,18 +2,18 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../../lib/auth';
-import { Award, FileText, FileSearch, Globe, GraduationCap, TrendingUp, Users, Check, Ban, Download, Search, Filter, ChevronDown, ChevronUp, ShieldCheck, BookOpen, FileEdit, Briefcase, Building } from 'lucide-react';
+import { Award, FileText, FileSearch, Globe, GraduationCap, TrendingUp, Users, Check, Ban, Download, Search, Filter, ChevronDown, ChevronUp } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Data structure for different module types
 const MODULE_TYPES = {
     seminars: {
-      name: 'Seminars/Conferences/Workshops/FDPs/Guest Lectures',
+      name: 'Seminars/Conferences',
       icon: FileText,
       apiEndpoint: 's-c-w-fdp-g',
       fields: [
-        { key: 'empId', label: 'Employee ID' },
-        { key: 'employee', label: 'Employee Name' },
+        // { key: 'empId', label: 'Employee ID' },
+        // { key: 'employee', label: 'Employee Name' },
         { key: 'title', label: 'Event Title' },
         { key: 'type1', label: 'Event Type' },
         { key: 'type2', label: 'Participation Type' },
@@ -21,7 +21,8 @@ const MODULE_TYPES = {
         { key: 'host', label: 'Host' },
         { key: 'agency', label: 'Sponsoring Agency' },
         { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
-        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+        { key: 'status', label: 'Status'}
       ]
     },
     phd: {
@@ -29,37 +30,39 @@ const MODULE_TYPES = {
         icon: GraduationCap,
         apiEndpoint: 'phd',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'university', label: 'University' },
             { key: 'special', label: 'Specialization' },
             { key: 'guide', label: 'Guide Name' },
             { key: 'college', label: 'Guide College' },
             { key: 'dept', label: 'Guide Department' },
             { key: 'statuss', label: 'Type' },
-            { key: 'sdate', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'sdate', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     phdguiding: {
         name: 'PhD Guiding',
-        icon: ShieldCheck,
+        icon: Users,
         apiEndpoint: 'phdguiding',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'university', label: 'University' },
             { key: 'special', label: 'Specialization' },
             { key: 'name', label: 'Scholar Name' },
-            { key: 'sdate', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'sdate', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     journals: {
         name: 'Journals',
-        icon: BookOpen,
+        icon: FileText,
         apiEndpoint: 'journals',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'title', label: 'Journal Title' },
             { key: 'name', label: 'Journal Name' },
             { key: 'issuedate', label: 'Issue Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
@@ -70,7 +73,8 @@ const MODULE_TYPES = {
             { key: 'impact', label: 'Impact Factor' },
             { key: 'type1', label: 'Type' },
             { key: 'scopus', label: 'Scopus' },
-            { key: 'pdate', label: 'Publication Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'pdate', label: 'Publication Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     books : {
@@ -78,28 +82,30 @@ const MODULE_TYPES = {
         icon: FileText,
         apiEndpoint: 'books',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'book', label: 'Book Title' },
             { key: 'type1', label: 'Type' },
             { key: 'publisher', label: 'Publisher' },
             { key: 'pub1', label: 'Publication Details' },
-            { key: 'sdate', label: 'Publication Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'sdate', label: 'Publication Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },,
+            { key: 'status', label: 'Status'}
         ]
     },
     journaledited: {
         name: 'Journal Edited',
-        icon: FileEdit,
+        icon: FileText,
         apiEndpoint: 'journaledited',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'journal', label: 'Journal Title' },
             { key: 'paper', label: 'Paper Title' },
             { key : 'type1', label: 'Type of Work' },
             { key : 'publisher', label: 'Publisher' },
             { key: 'sdate', label: 'Publication Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
-            { key: 'pub1', label: 'Journal Details' }
+            { key: 'pub1', label: 'Journal Details' },
+            { key: 'status', label: 'Status'}
         ]
     },
     researchgrant: {
@@ -107,8 +113,8 @@ const MODULE_TYPES = {
         icon: TrendingUp,
         apiEndpoint: 'researchgrant',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'title', label: 'Project Title' },
             { key: 'duration', label: 'Duration' },
             { key: 'agency', label: 'Agency' },
@@ -117,7 +123,8 @@ const MODULE_TYPES = {
             { key: 'date1', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
             { key: 'type1', label: 'Project Status' },
             { key: 'type2', label: 'Project Type' },
-            { key: 'comment', label: 'Research Details' }
+            { key: 'comment', label: 'Research Details' },
+            { key: 'status', label: 'Status'}
         ]
     },
     patents: {
@@ -125,12 +132,12 @@ const MODULE_TYPES = {
         icon: FileSearch,
         apiEndpoint: 'patents',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'title', label: 'Patent Title' },
             { key: 'fnum', label: 'File Number' },
             { key: 'date1', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
-            { key: 'status1', label: 'Status' }
+            { key: 'status', label: 'Status' }
         ]
     },
     qualifications: {
@@ -138,13 +145,14 @@ const MODULE_TYPES = {
         icon: GraduationCap,
         apiEndpoint: 'qualifications',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'impro', label: 'Improved Qualification' },
             { key: 'special', label: 'Improved Specialization' },
             { key: 'type1', label: 'Institution Type' },
             { key: 'name', label: 'Institution Name' },
-            { key: 'date1', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'date1', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     visits: {
@@ -152,15 +160,16 @@ const MODULE_TYPES = {
         icon: Globe,
         apiEndpoint: 'visits',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'type1', label: 'Type of Place' },
             { key: 'place', label: 'Place' },
             { key: 'purpose', label: 'Purpose' },
             { key: 'agency', label: 'Funding Agency' },
             { key: 'amount', label: 'Amount %' },
             { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
-            { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     awards: {
@@ -168,14 +177,15 @@ const MODULE_TYPES = {
       icon: Award,
       apiEndpoint: 'awards',
       fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'award', label: 'Award Title' },
             { key: 'type1', label: 'Award Type' },
             { key: 'type2', label: 'Agency Type' },
             { key: 'agency', label: 'Agency Name' },
             { key: 'ifany', label: 'Event Details' },
-            { key: 'date2', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'date2', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
       ]
     },
     membership: {
@@ -183,44 +193,47 @@ const MODULE_TYPES = {
         icon: Users,
         apiEndpoint: 'membership',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'member', label: 'Membership Title' },
             { key: 'body', label: 'Body Name' },
             { key: 'date2', label: 'Appointment Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
-            { key: 'term', label: 'Term' }
+            { key: 'term', label: 'Term' },
+            { key: 'status', label: 'Status'}
         ]
     },
     consultancy: {
         name: 'Consultancy',
-        icon: Briefcase,
+        icon: FileText,
         apiEndpoint: 'consultancy',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'work', label: 'Nature of Work' },
             { key: 'agency', label: 'Agency Name' },
             { key: 'amount', label: 'Amount' },
-            { key: 'date', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'date', label: 'Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
     infrastructure: {
         name: 'Infrastructure',
-        icon: Building,
+        icon: FileText,
         apiEndpoint: 'infrastructure',
         fields: [
-            { key: 'empId', label: 'Employee ID' },
-            { key: 'employee', label: 'Employee Name' },
+            // { key: 'empId', label: 'Employee ID' },
+            // { key: 'employee', label: 'Employee Name' },
             { key: 'title', label: 'Equipment Name' },
             { key: 'title1', label: 'Nature of Equipment' },
             { key: 'comment', label: 'Description' },
             { key: 'title2', label: 'Amount' },
-            { key: 'date2', label: 'Purchase Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+            { key: 'date2', label: 'Purchase Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+            { key: 'status', label: 'Status'}
         ]
     },
 }
 
-export default function ReviewPage() {
+export default function SubmissionsPage() {
   const { user, token } = useAuth();
   const [moduleData, setModuleData] = useState({
     awards: [],
@@ -254,46 +267,24 @@ export default function ReviewPage() {
     consultancy: false,
     infrastructure: false
   });
-//   const [expandedModules, setExpandedModules] = useState({
-//     awards: true,
-//     seminars: true,
-//     phd: true,
-//     phdguiding: true,
-//     journals: true,
-//     books: true,
-//     journaledited: true,
-//     researchgrant: true,
-//     patents: true,
-//     qualifications: true,
-//     visits: true,
-//     membership: true,
-//     consultancy: true,
-//     infrastructure: true
-//   });
+
   const [searchTerm, setSearchTerm] = useState('');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [actionType, setActionType] = useState('');
-  const [reason, setReason] = useState('');
-  const [selectedModule, setSelectedModule] = useState('');
 
   // Fetch data for all modules
   const [expandedModules, setExpandedModules] = useState({});
 
   // Fetch data for all modules
   useEffect(() => {
-    if (user?.role === 'incharge') {
       Object.keys(MODULE_TYPES).forEach(moduleType => {
         fetchModuleData(moduleType);
       });
-    }
   }, [user, token]);
 
   const fetchModuleData = async (moduleType) => {
     try {
       setLoading(prev => ({ ...prev, [moduleType]: true }));
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending`,
+        `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -328,57 +319,22 @@ export default function ReviewPage() {
     }));
   };
 
-  const openConfirmDialog = (item, moduleType, action) => {
-    setSelectedItem(item);
-    setSelectedModule(moduleType);
-    setActionType(action);
-    setReason('');
-    setShowConfirmDialog(true);
-  };
+    const filteredData = (moduleType) => {
+        const moduleName = MODULE_TYPES[moduleType]?.name?.toLowerCase();
+        const term = searchTerm?.toLowerCase();
 
-  const closeConfirmDialog = () => {
-    setShowConfirmDialog(false);
-    setSelectedItem(null);
-    setSelectedModule('');
-    setActionType('');
-  };
-
-  const handleStatusChange = async () => {
-    try {
-      if (actionType === 'reject' && !reason.trim()) {
-        toast.error('Please provide a reason for rejection');
-        return;
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[selectedModule].apiEndpoint}/${selectedItem._id}/status`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ 
-            status: actionType === 'accept' ? 'Accepted' : 'Rejected',
-            reason: actionType === 'reject' ? reason : undefined
-          })
+        if (!term) {
+            return moduleData[moduleType];
         }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to update status');
-      }
-
-      toast.success(`Item ${actionType === 'accept' ? 'accepted' : 'rejected'} successfully`);
-      fetchModuleData(selectedModule); // Refresh the data
-    } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Failed to update status');
-    } finally {
-      closeConfirmDialog();
-    }
-  };
-
+        
+        // Only check if module name matches search term
+        if (moduleName && moduleName.includes(term)) {
+            return moduleData[moduleType];
+        }
+        
+        // Don't return any data if module name doesn't match
+        return [];
+    };
     const shouldShowModule = (moduleType) => {
         const moduleName = MODULE_TYPES[moduleType]?.name?.toLowerCase();
         const term = searchTerm?.toLowerCase();
@@ -412,47 +368,11 @@ useEffect(() => {
   }
 }, [searchTerm, moduleData]);
 
-  if (user?.role === 'faculty') {
-    return (
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-brand-primary p-6">
-        <div className="text-6xl mb-4 animate-bounce">🚫</div>
-        <h1 className="lg:text-5xl text-2xl font-bold mb-2">Access Denied</h1>
-        <p className="text-lg text-gray-600 mb-6">
-          You don't have permission to access this page.
-        </p>
-        <a
-          href="/dashboard"
-          className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
-        >
-          Return to Dashboard
-        </a>
-      </div>
-    );
-  }
-
-  if (user?.role === 'admin') {
-    return (
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-brand-primary p-6">
-        <div className="text-6xl mb-4 animate-bounce">🚫</div>
-        <h1 className="lg:text-5xl text-2xl font-bold mb-2">404 - Page Not Found</h1>
-        <p className="text-lg text-gray-600 mb-6">
-          Sorry, we couldn’t find that page.
-        </p>
-        <a
-          href="/dashboard"
-          className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
-        >
-          Return to Dashboard
-        </a>
-      </div>
-    );
-  }
-
-  return (
+if (user.role === 'faculty') {
+return (
     <div className="p-4 max-w-7xl mx-auto">
       <div className="bg-gradient-brand p-6 text-center mb-6 rounded-lg">
-        <h2 className="text-2xl font-bold text-white">Review & Approvals</h2>
-        <p className="text-brand-cream text-sm">Review and approve submissions from your department</p>
+        <h2 className="text-2xl font-bold text-white">View Submissions</h2>
       </div>
 
       {/* Search Bar */}
@@ -520,18 +440,39 @@ useEffect(() => {
                           <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
                             Document
                           </th>
-                          <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                            Actions
-                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {actualData.map((item, index) => (
                           <tr key={index} className="hover:bg-gray-50 even:bg-gray-50">
                             {MODULE_TYPES[moduleType].fields.map(field => (
-                              <td key={field.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream">
-                                {field.format ? field.format(item[field.key]) : item[field.key] || '-'}
-                              </td>
+                              <td key={field.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
+                                    {field.key === 'status' ? (
+                                        <>
+                                        <div>
+                                            <span
+                                            className={`px-2 py-1 rounded-full font-semibold text-white ${
+                                                item[field.key] === 'Pending'
+                                                ? 'bg-amber-400'
+                                                : item[field.key] === 'Accepted'
+                                                ? 'bg-green-500'
+                                                : 'bg-red-500'
+                                            }`}
+                                            >
+                                            {item[field.key]}
+                                            </span>
+                                        </div>
+                                        {item[field.key] === 'Rejected' && (
+                                            <div className="mt-1 text-sm text-gray-500">
+                                            ({item.reason ? item.reason : '-'})
+                                            </div>
+                                        )}
+                                        </>
+                                    ) : (
+                                        field.format ? field.format(item[field.key]) : item[field.key] || '-'
+                                    )}
+                                    </td>
+
                             ))}
                             <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
                               {item.path ? (
@@ -548,24 +489,6 @@ useEffect(() => {
                               ) : (
                                 <span className="text-gray-400">-</span>
                               )}
-                            </td>
-                            <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
-                              <div className="flex justify-center space-x-2">
-                                <button
-                                  onClick={() => openConfirmDialog(item, moduleType, 'accept')}
-                                  className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors cursor-pointer"
-                                  title="Accept"
-                                >
-                                  <Check className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => openConfirmDialog(item, moduleType, 'reject')}
-                                  className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors cursor-pointer"
-                                  title="Reject"
-                                >
-                                  <Ban className="h-4 w-4" />
-                                </button>
-                              </div>
                             </td>
                           </tr>
                         ))}
@@ -584,54 +507,22 @@ useEffect(() => {
           </div>
         );
       })}
-
-      {/* Confirmation Dialog */}
-      {showConfirmDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-brand-primary mb-4">
-              Confirm {actionType === 'accept' ? 'Acceptance' : 'Rejection'}
-            </h3>
-            {actionType === 'reject' && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-brand-primary mb-2">
-                  Reason for Rejection <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={reason}
-                  onChange={(e) => setReason(e.target.value)}
-                  placeholder="Please provide a reason for rejection"
-                  className="w-full p-3 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition-colors text-gray-900 placeholder-gray-500"
-                  rows="3"
-                  required
-                />
-              </div>
-            )}
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to {actionType} this {MODULE_TYPES[selectedModule]?.name.toLowerCase()} submission? 
-              This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={closeConfirmDialog}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleStatusChange}
-                className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                  actionType === 'accept' 
-                    ? 'bg-green-500 hover:bg-green-600' 
-                    : 'bg-red-500 hover:bg-red-600'
-                }`}
-              >
-                Confirm {actionType === 'accept' ? 'Accept' : 'Reject'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
+}
+return (
+    <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center text-brand-primary p-6">
+      <div className="text-6xl mb-4 animate-bounce">🚫</div>
+      <h1 className="lg:text-5xl text-2xl font-bold mb-2">404 - Page Not Found</h1>
+      <p className="text-lg text-gray-600 mb-6">
+        Sorry, we couldn’t find that page.
+      </p>
+      <a
+        href="/dashboard"
+        className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
+      >
+        Return to Dashboard
+      </a>
+    </div>
+)
 }

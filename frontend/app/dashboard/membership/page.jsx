@@ -18,42 +18,6 @@ export default function MembershipPage() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState('');
-  const [membershipsData, setMembershipsData] = useState([]);
-  const [loadingMemberships, setLoadingMemberships] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [selectedMembership, setSelectedMembership] = useState(null);
-  const [actionType, setActionType] = useState('');
-  const [reason, setReason] = useState('');
-
-  // Fetch memberships data for incharge
-  useEffect(() => {
-    if (user?.role === 'incharge') {
-      fetchMembershipsData();
-    }
-  }, [user, token]);
-
-  const fetchMembershipsData = async () => {
-    try {
-      setLoadingMemberships(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/membership?status=Pending`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch membership data');
-      }
-      
-      const result = await response.json();
-      setMembershipsData(result);
-    } catch (error) {
-      console.error('Error fetching memberships:', error);
-      toast.error('Failed to load memberships data');
-    } finally {
-      setLoadingMemberships(false);
-    }
-  };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -165,52 +129,6 @@ export default function MembershipPage() {
     setSelectedFileName('');
     if (fileInputRef.current) {
       fileInputRef.current.value = null;
-    }
-  };
-
-    const openConfirmDialog = (membership, action) => {
-    setSelectedMembership(membership);
-    setActionType(action);
-    setReason(''); // Reset reason when opening dialog
-    setShowConfirmDialog(true);
-  };
-
-  const closeConfirmDialog = () => {
-    setShowConfirmDialog(false);
-    setSelectedMembership(null);
-    setActionType('');
-  };
-
-  const handleStatusChange = async () => {
-    try {
-      // For rejections, require a reason
-      if (actionType === 'reject' && !reason.trim()) {
-        toast.error('Please provide a reason for rejection');
-        return;
-      }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/membership/${selectedMembership._id}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ 
-          status: actionType === 'accept' ? 'Accepted' : 'Rejected',
-          reason: actionType === 'reject' ? reason : undefined
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update membership status');
-      }
-
-      toast.success(`Membership ${actionType === 'accept' ? 'accepted' : 'rejected'} successfully`);
-      fetchMembershipsData(); // Refresh the data
-    } catch (error) {
-      console.error('Error updating membership status:', error);
-      toast.error('Failed to update membership status');
-    } finally {
-      closeConfirmDialog();
     }
   };
 
@@ -447,174 +365,6 @@ export default function MembershipPage() {
     </div>
   );
 }
-  if (user?.role === 'incharge') {
-    return (
-      <div className="p-4 max-w-6xl mx-auto">
-        <div className="bg-gradient-brand p-6 text-center mb-6 rounded-lg">
-          <div className="flex items-center justify-center mb-2">
-            <Award className="h-8 w-8 text-white mr-3" />
-            <h2 className="text-2xl font-bold text-white">Memberships Approval</h2>
-          </div>
-          <p className="text-brand-cream text-sm">Review and approve membership from your department</p>
-        </div>
-
-        {loadingMemberships ? (
-          <div className="text-center p-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4"></div>
-            <p>Loading memberships data...</p>
-          </div>
-        ) : membershipsData.length > 0 ? (
-          <>
-            <div className="mb-4">
-              <p className="text-brand-primary">
-                {membershipsData.length} membership{membershipsData.length !== 1 ? 's' : ''} pending approval
-              </p>
-            </div>
-
-            <div className="overflow-x-auto rounded-lg border border-brand-primary">
-              <table className="min-w-full bg-white border-separate">
-                <thead>
-                  <tr className="bg-gradient-subtle">
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Employee ID
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Employee Name
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Membership Title
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Body Name
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Appointment Date
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Term
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Document
-                    </th>
-                    <th className="py-3 px-4 text-center text-sm font-medium text-brand-primary border-b border-brand-cream">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {membershipsData.map((membership, index) => (
-                    <tr key={index} className="hover:bg-gray-50 even:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.empId}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.employee}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.member}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.body}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.date2 ? new Date(membership.date2).toLocaleDateString() : '-'}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
-                        {membership.term}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
-                        {membership.path ? (
-                          <a
-                            href={`${process.env.NEXT_PUBLIC_API_URL}/membership/file/${membership.path}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-brand-secondary hover:text-brand-accent font-medium"
-                          >
-                            View
-                          </a>
-                        ) : (
-                          <span className="text-gray-400">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-center border-b border-brand-cream">
-                        <div className="flex justify-center space-x-2">
-                          <button
-                            onClick={() => openConfirmDialog(membership, 'accept')}
-                            className="p-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors cursor-pointer"
-                            title="Accept"
-                          >
-                            <Check className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => openConfirmDialog(membership, 'reject')}
-                            className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors cursor-pointer"
-                            title="Reject"
-                          >
-                            <Ban className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        ) : (
-          <div className="text-center p-8 bg-gradient-subtle rounded-lg border border-brand-cream">
-            <p className="text-brand-primary font-medium">No pending memberships found for your department.</p>
-          </div>
-        )}
-
-        {/* Confirmation Dialog */}
-        {showConfirmDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
-              <h3 className="text-lg font-bold text-brand-primary mb-4">
-                Confirm {actionType === 'accept' ? 'Acceptance' : 'Rejection'}
-              </h3>
-              {actionType === 'reject' && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-brand-primary mb-2">
-                    Reason for Rejection <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Please provide a reason for rejecting this membership"
-                    className="w-full p-3 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-secondary focus:border-brand-secondary transition-colors text-gray-900 placeholder-gray-500"
-                    rows="2"
-                    required
-                  />
-                </div>
-              )}
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to {actionType} this membership? This action cannot be undone.
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={closeConfirmDialog}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleStatusChange}
-                  className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                    actionType === 'accept' 
-                      ? 'bg-green-500 hover:bg-green-600' 
-                      : 'bg-red-500 hover:bg-red-600'
-                  }`}
-                >
-                  Confirm {actionType === 'accept' ? 'Accept' : 'Reject'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
 
   // Default return for other roles
   return (
@@ -625,7 +375,7 @@ export default function MembershipPage() {
         Sorry, we couldn’t find that page.
       </p>
       <a
-        href="/"
+        href="/dashboard"
         className="inline-block px-6 py-3 bg-brand-primary text-white rounded-lg shadow hover:bg-brand-secondary transition"
       >
         Return to Dashboard

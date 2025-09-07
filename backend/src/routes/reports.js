@@ -175,10 +175,10 @@ router.get('/data', auth, async (req, res) => {
       case 'INFRASTRUCTURE':
         Model = Infrastructure;
         break;
-      case 'SUMMARY':
-        return handleSummaryReport(res, year, department, req.query.format === 'excel');
+      // case 'SUMMARY':
+      //   return handleSummaryReport(res, year, department, req.query.format === 'excel');
       default:
-        return res.status(400).json({ error: 'Invalid report type' });
+        return res.status(400).json({ error: 'Invalid report type or branch' });
     }
 
     // Add year filter if specified
