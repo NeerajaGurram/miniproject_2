@@ -47,9 +47,8 @@ const navigation = [
   { name: 'Membership', href: '/dashboard/membership', icon: Users },
   { name: 'Consultancy', href: '/dashboard/consultancy', icon: Briefcase },
   { name: 'Infrastructure', href: '/dashboard/infrastructure', icon: Building },
+  { name: 'Review', href: '/dashboard/review', icon: BarChart3, inchargeOnly: true },
   { name: 'Reports', href: '/dashboard/reports', icon: BarChart3 },
-  // { name: 'Users', href: '/dashboard/users', icon: Users, adminOnly: true },
-  // { name: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -65,7 +64,7 @@ export default function DashboardLayout({ children }) {
 
   const filteredNavigation = isAdmin
   ? navigation.filter(item => ['Dashboard', 'Change Password', 'Reports'].includes(item.name))
-  : navigation.filter(item => !item.adminOnly);
+  : (user.role === 'incharge') ? navigation.filter(item => ['Dashboard', 'Change Password', 'Review', 'Reports'].includes(item.name)) : navigation.filter(item => !item.inchargeOnly);
 
   // Function to check if a nav item is active
   const isActive = (href) => {

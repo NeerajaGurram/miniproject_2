@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoginError(null);
     setIsLoading(true);
     try {
-      console.log('Submitting:', data); // Add this for debugging
+      // console.log('Submitting:', data); 
       const result = await login(data);
       if (result.success) {
         router.push('/dashboard');
