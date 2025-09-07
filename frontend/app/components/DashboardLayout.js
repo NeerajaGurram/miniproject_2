@@ -36,6 +36,7 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Change Password', href: '/dashboard/change-password', icon: Lock },
   { name: 'View Submissions', href: '/dashboard/view-submissions', icon: Eye, FacultyOnly: true },
+  { name: 'View Performance', href: '/dashboard/view-performance', icon: Eye, FacultyOnly: true },
   { name: 'S/C/W/FDP/G', href: '/dashboard/s-c-w-fdp-g', icon: FileText },
   { name: 'PhD', href: '/dashboard/phd', icon: GraduationCap },
   { name: 'PhD Guiding', href: '/dashboard/phd-guiding', icon: ShieldCheck },
