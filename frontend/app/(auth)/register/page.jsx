@@ -59,6 +59,7 @@ export default function RegisterPage() {
                 <input
                   id="empId"
                   type="text"
+                  suppressHydrationWarning
                   {...register('empId', {
                     required: 'Employee ID is required',
                     minLength: {
@@ -87,6 +88,7 @@ export default function RegisterPage() {
                 <input
                   id="name"
                   type="text"
+                  suppressHydrationWarning
                   {...register('name', {
                     required: 'Full name is required',
                     minLength: {
@@ -116,6 +118,7 @@ export default function RegisterPage() {
                 <input
                   id="email"
                   type="email"
+                  suppressHydrationWarning
                   {...register('email', {
                     required: 'Email is required',
                     pattern: {
@@ -145,6 +148,7 @@ export default function RegisterPage() {
                 <input
                   id="phone"
                   type="tel"
+                  suppressHydrationWarning
                   {...register('phone', {
                     required: 'Phone number is required',
                     pattern: {
@@ -207,6 +211,7 @@ export default function RegisterPage() {
                 <input
                   id="designation"
                   type="text"
+                  suppressHydrationWarning
                   {...register('designation', {
                     required: 'Designation is required',
                     minLength: {
@@ -236,6 +241,7 @@ export default function RegisterPage() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
+                  suppressHydrationWarning
                   {...register('password', {
                     required: 'Password is required',
                     minLength: {
@@ -250,6 +256,7 @@ export default function RegisterPage() {
                 />
                 <button
                   type="button"
+                  suppressHydrationWarning
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -276,6 +283,7 @@ export default function RegisterPage() {
                 <input
                   id="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
+                  suppressHydrationWarning
                   {...register('confirmPassword', {
                     required: 'Please confirm your password',
                     validate: (value) =>
@@ -288,6 +296,7 @@ export default function RegisterPage() {
                 />
                 <button
                   type="button"
+                  suppressHydrationWarning
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
@@ -306,6 +315,7 @@ export default function RegisterPage() {
             <div>
               <button
                 type="submit"
+                suppressHydrationWarning
                 disabled={isLoading}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-brand-primary bg-brand-highlight hover:bg-brand-warm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-highlight disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >

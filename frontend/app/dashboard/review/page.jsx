@@ -559,8 +559,8 @@ export default function ReviewPage() {
                   renderErrorState(moduleType)
                 ) : isLoading ? (
                   <div className="text-center p-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4 text-brand-secondary"></div>
-                    <p>Loading {MODULE_TYPES[moduleType].name} data...</p>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4"></div>
+                    <p className='text-brand-secondary'>Loading {MODULE_TYPES[moduleType].name} data...</p>
                   </div>
                 ) : actualCount > 0 ? (
                   <div className="overflow-x-auto">

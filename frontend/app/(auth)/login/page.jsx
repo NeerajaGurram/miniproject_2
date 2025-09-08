@@ -66,6 +66,7 @@ export default function LoginPage() {
                 <input
                   id="empId"
                   type="text"
+                  suppressHydrationWarning
                   {...register('empId', {
                     required: 'Employee ID is required',
                     minLength: {
@@ -94,6 +95,7 @@ export default function LoginPage() {
                 </div>
                 <input
                   id="password"
+                  suppressHydrationWarning
                   type={showPassword ? 'text' : 'password'}
                   {...register('password', {
                     required: 'Password is required',
@@ -109,6 +111,7 @@ export default function LoginPage() {
                 />
                 <button
                   type="button"
+                  suppressHydrationWarning
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -147,6 +150,7 @@ export default function LoginPage() {
             <div>
               <button
                 type="submit"
+                suppressHydrationWarning
                 disabled={isLoading}
                 className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-brand-primary bg-brand-highlight hover:bg-brand-warm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-highlight disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg hover:shadow-xl"
               >

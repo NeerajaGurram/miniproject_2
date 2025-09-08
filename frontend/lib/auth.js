@@ -24,41 +24,39 @@ export const AuthProvider = ({ children }) => {
   const pathname = usePathname();
 
   // Initialize auth state
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
+useEffect(() => {
+  let isMounted = true;
 
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
-          
-          try {
-            // Verify token with server - handle potential errors
-            const response = await authAPI.getProfile();
-            setUser(response.data.user);
-          } catch (verifyError) {
-            console.error('Token verification failed:', verifyError);
-            // Token might be invalid/expired, clear local storage
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            setToken(null);
-            setUser(null);
-          }
+  const initAuth = async () => {
+    try {
+      const storedToken = localStorage.getItem('token');
+      const storedUser = localStorage.getItem('user');
+
+      if (storedToken && storedUser) {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+
+        // Only fetch profile if not already verified recently
+        if (isMounted) {
+          const response = await authAPI.getProfile();
+          if (isMounted) setUser(response.data.user);
         }
-      } catch (error) {
-        console.error('Auth initialization error:', error);
-        // Clear any corrupted data
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (verifyError) {
+      console.error('Token verification failed:', verifyError);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setToken(null);
+      setUser(null);
+    } finally {
+      if (isMounted) setLoading(false);
+    }
+  };
 
-    initAuth();
-  }, []);
+  initAuth();
+
+  return () => { isMounted = false; };
+}, []);
 
   // Handle route protection
   useEffect(() => {
