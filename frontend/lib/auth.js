@@ -34,13 +34,24 @@ export const AuthProvider = ({ children }) => {
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
           
-          // Verify token with server
-          const response = await authAPI.getProfile();
-          setUser(response.data.user);
+          try {
+            // Verify token with server - handle potential errors
+            const response = await authAPI.getProfile();
+            setUser(response.data.user);
+          } catch (verifyError) {
+            console.error('Token verification failed:', verifyError);
+            // Token might be invalid/expired, clear local storage
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setToken(null);
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        logout();
+        // Clear any corrupted data
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       } finally {
         setLoading(false);
       }

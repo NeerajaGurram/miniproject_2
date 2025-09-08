@@ -148,13 +148,13 @@ router.post('/login', validateLogin, async (req, res) => {
 // Get current user profile
 router.get('/profile', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('researchCount pendingResearchCount');
+    const user = await User.findById(req.user._id);
     res.json({
       user: user.getPublicProfile(),
-      stats: {
-        totalResearch: user.researchCount || 0,
-        pendingResearch: user.pendingResearchCount || 0
-      }
+      // stats: {
+      //   totalResearch: user.researchCount || 0,
+      //   pendingResearch: user.pendingResearchCount || 0
+      // }
     });
   } catch (error) {
     console.error('Get profile error:', error);

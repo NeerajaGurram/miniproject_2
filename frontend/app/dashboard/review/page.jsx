@@ -1,6 +1,6 @@
 // review/page.jsx
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { Award, FileText, FileSearch, Globe, GraduationCap, TrendingUp, Users, Check, Ban, Download, Search, Filter, ChevronDown, ChevronUp, ShieldCheck, BookOpen, FileEdit, Briefcase, Building } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -220,8 +220,29 @@ const MODULE_TYPES = {
     },
 }
 
+const fetchWithRetry = async (url, options, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      return response; // Return response immediately if successful
+      
+    } catch (error) {
+      console.error(`Attempt ${i + 1} failed:`, error);
+      
+      // If it's the last attempt, throw the error
+      if (i === retries - 1) {
+        throw error;
+      }
+      
+      // Wait before retrying (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+  throw new Error('All retry attempts failed'); // Fallback error
+};
+
 export default function ReviewPage() {
-  const { user, token } = useAuth();
+  const { user, token, logout } = useAuth();
   const [moduleData, setModuleData] = useState({
     awards: [],
     seminars: [],
@@ -276,6 +297,7 @@ export default function ReviewPage() {
   const [actionType, setActionType] = useState('');
   const [reason, setReason] = useState('');
   const [selectedModule, setSelectedModule] = useState('');
+  const [errors, setErrors] = useState({});
 
   // Fetch data for all modules
   const [expandedModules, setExpandedModules] = useState({});
@@ -289,10 +311,12 @@ export default function ReviewPage() {
     }
   }, [user, token]);
 
-  const fetchModuleData = async (moduleType) => {
+  const fetchModuleData = useCallback(async (moduleType) => {
     try {
       setLoading(prev => ({ ...prev, [moduleType]: true }));
-      const response = await fetch(
+      setErrors(prev => ({ ...prev, [moduleType]: null }));
+      
+      const response = await fetchWithRetry(
         `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending`,
         {
           headers: {
@@ -301,8 +325,20 @@ export default function ReviewPage() {
         }
       );
       
+      // Check if response exists and is ok
+      if (!response) {
+        throw new Error('No response received from server');
+      }
+      
       if (!response.ok) {
-        throw new Error(`Failed to fetch ${moduleType} data`);
+        // Handle unauthorized access
+        if (response.status === 401) {
+          toast.error('Session expired. Please login again.');
+          logout();
+          return;
+        }
+        
+        throw new Error(`Failed to fetch ${moduleType} data: ${response.status}`);
       }
       
       const result = await response.json();
@@ -311,15 +347,19 @@ export default function ReviewPage() {
       // Auto-collapse modules with no data
       setExpandedModules(prev => ({
         ...prev,
-        [moduleType]: result.length > 0 // Only expand if there's data
+        [moduleType]: result.length > 0
       }));
     } catch (error) {
       console.error(`Error fetching ${moduleType}:`, error);
-      toast.error(`Failed to load ${MODULE_TYPES[moduleType].name} data`);
+      
+      setErrors(prev => ({ 
+        ...prev, 
+        [moduleType]: `Failed to load ${MODULE_TYPES[moduleType].name} data: ${error.message}` 
+      }));
     } finally {
       setLoading(prev => ({ ...prev, [moduleType]: false }));
     }
-  };
+  }, [token, logout]);
 
   const toggleModule = (moduleType) => {
     setExpandedModules(prev => ({
@@ -392,25 +432,38 @@ export default function ReviewPage() {
     };
 
 
-useEffect(() => {
-  if (searchTerm) {
-    const newExpandedState = {};
-    Object.keys(MODULE_TYPES).forEach(moduleType => {
-      const moduleName = MODULE_TYPES[moduleType]?.name?.toLowerCase();
-      const term = searchTerm?.toLowerCase();
-      // Only expand if module name matches search term
-      newExpandedState[moduleType] = moduleName && moduleName.includes(term);
-    });
-    setExpandedModules(newExpandedState);
-  } else {
-    // When search is cleared, return to default state (only expand modules with data)
-    const newExpandedState = {};
-    Object.keys(MODULE_TYPES).forEach(moduleType => {
-      newExpandedState[moduleType] = moduleData[moduleType].length > 0;
-    });
-    setExpandedModules(newExpandedState);
-  }
-}, [searchTerm, moduleData]);
+  useEffect(() => {
+    if (searchTerm) {
+      const newExpandedState = {};
+      Object.keys(MODULE_TYPES).forEach(moduleType => {
+        const moduleName = MODULE_TYPES[moduleType]?.name?.toLowerCase();
+        const term = searchTerm?.toLowerCase();
+        newExpandedState[moduleType] = moduleName && moduleName.includes(term);
+      });
+      setExpandedModules(newExpandedState);
+    } else {
+      const newExpandedState = {};
+      Object.keys(MODULE_TYPES).forEach(moduleType => {
+        newExpandedState[moduleType] = moduleData[moduleType].length > 0;
+      });
+      setExpandedModules(newExpandedState);
+    }
+  }, [searchTerm, moduleData]);
+
+  // Add retry buttons for failed modules
+  const renderErrorState = (moduleType) => (
+    <div className="text-center p-8 bg-red-50 rounded-lg">
+      <p className="text-red-600 font-medium mb-2">
+        {errors[moduleType]}
+      </p>
+      <button
+        onClick={() => fetchModuleData(moduleType)}
+        className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+      >
+        Retry
+      </button>
+    </div>
+  );
 
   if (user?.role === 'faculty') {
     return (
@@ -502,9 +555,11 @@ useEffect(() => {
             {/* Module Content */}
             {isExpanded && (
               <div className="p-4">
-                {isLoading ? (
+                {errors[moduleType] ? (
+                  renderErrorState(moduleType)
+                ) : isLoading ? (
                   <div className="text-center p-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-secondary mx-auto mb-4 text-brand-secondary"></div>
                     <p>Loading {MODULE_TYPES[moduleType].name} data...</p>
                   </div>
                 ) : actualCount > 0 ? (
