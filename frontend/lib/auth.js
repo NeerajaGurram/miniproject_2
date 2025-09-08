@@ -28,33 +28,39 @@ useEffect(() => {
   let isMounted = true;
 
   const initAuth = async () => {
-    try {
-      const storedToken = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
+    const storedUser = localStorage.getItem('user');
 
-      if (storedToken && storedUser) {
-        setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+    if (storedToken && storedUser) {
+      setToken(storedToken);
+      setUser(JSON.parse(storedUser));
 
-        // Only fetch profile if not already verified recently
-        if (isMounted) {
+      // Verify only if we haven't checked recently
+      const lastVerified = localStorage.getItem('lastVerified');
+      const now = Date.now();
+
+      if (!lastVerified || now - parseInt(lastVerified, 10) > 5 * 60 * 1000) { // 5 min
+        try {
           const response = await authAPI.getProfile();
-          if (isMounted) setUser(response.data.user);
+          if (isMounted) {
+            setUser(response.data.user);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('lastVerified', now.toString());
+          }
+        } catch (verifyError) {
+          console.error('Token verification failed:', verifyError);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('lastVerified');
+          setToken(null);
+          setUser(null);
         }
       }
-    } catch (verifyError) {
-      console.error('Token verification failed:', verifyError);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setToken(null);
-      setUser(null);
-    } finally {
-      if (isMounted) setLoading(false);
     }
+    setLoading(false);
   };
 
   initAuth();
-
   return () => { isMounted = false; };
 }, []);
 

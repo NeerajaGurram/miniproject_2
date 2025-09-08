@@ -220,6 +220,8 @@ const MODULE_TYPES = {
     },
 }
 
+const cache={};
+
 const fetchWithRetry = async (url, options, retries = 3) => {
   for (let i = 0; i < retries; i++) {
     try {
@@ -315,46 +317,50 @@ export default function ReviewPage() {
     try {
       setLoading(prev => ({ ...prev, [moduleType]: true }));
       setErrors(prev => ({ ...prev, [moduleType]: null }));
-      
-      const response = await fetchWithRetry(
-        `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      // Check if response exists and is ok
-      if (!response) {
-        throw new Error('No response received from server');
+
+      const url = `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending`;
+
+      // Use cache if available and not too old
+      if (cache[moduleType] && Date.now() - cache[moduleType].timestamp < 60_000) { // 1 min cache
+        setModuleData(prev => ({ ...prev, [moduleType]: cache[moduleType].data }));
+        setLoading(prev => ({ ...prev, [moduleType]: false }));
+        return;
       }
-      
+
+      const response = await fetchWithRetry(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
       if (!response.ok) {
-        // Handle unauthorized access
         if (response.status === 401) {
           toast.error('Session expired. Please login again.');
           logout();
           return;
         }
-        
+        if (response.status === 429) {
+          toast.error('Too many requests. Please slow down.');
+          return;
+        }
         throw new Error(`Failed to fetch ${moduleType} data: ${response.status}`);
       }
-      
+
       const result = await response.json();
       setModuleData(prev => ({ ...prev, [moduleType]: result }));
-      
-      // Auto-collapse modules with no data
+
+      // Cache it
+      cache[moduleType] = { data: result, timestamp: Date.now() };
+
+      // Auto-collapse if empty
       setExpandedModules(prev => ({
         ...prev,
         [moduleType]: result.length > 0
       }));
+
     } catch (error) {
       console.error(`Error fetching ${moduleType}:`, error);
-      
-      setErrors(prev => ({ 
-        ...prev, 
-        [moduleType]: `Failed to load ${MODULE_TYPES[moduleType].name} data: ${error.message}` 
+      setErrors(prev => ({
+        ...prev,
+        [moduleType]: `Failed to load ${MODULE_TYPES[moduleType].name} data: ${error.message}`
       }));
     } finally {
       setLoading(prev => ({ ...prev, [moduleType]: false }));

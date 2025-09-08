@@ -27,9 +27,13 @@ api.interceptors.request.use(
 // Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
+    if (error.response?.status === 429) {
+      console.warn("Rate limited, retrying after 2s...");
+      await new Promise(r => setTimeout(r, 2000));
+      return api.request(error.config);
+    }
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
