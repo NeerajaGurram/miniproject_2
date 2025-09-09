@@ -590,7 +590,7 @@ export default function ReviewPage() {
                         {actualData.map((item, index) => (
                           <tr key={index} className="hover:bg-gray-50 even:bg-gray-50">
                             {MODULE_TYPES[moduleType].fields.map(field => (
-                              <td key={field.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream">
+                              <td key={field.key} className="py-3 px-4 text-sm text-gray-700 border-b border-brand-cream text-center">
                                 {field.format ? field.format(item[field.key]) : item[field.key] || '-'}
                               </td>
                             ))}
