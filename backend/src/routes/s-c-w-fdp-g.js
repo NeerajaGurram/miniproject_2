@@ -99,7 +99,7 @@ router.post('/', auth, upload.single('file'), async (req, res) => {
 // GET route to fetch seminars with optional status filter
 router.get('/', auth, async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, type } = req.query;
     let query = {};
     
     // If user is incharge, only show seminars from their department
@@ -120,6 +120,9 @@ router.get('/', auth, async (req, res) => {
     // Add status filter if provided
     if (status) {
       query.status = status;
+    }
+    if (type) {
+      query.type1 = type;
     }
     
     const seminars = await Seminar.find(query).lean();

@@ -4,13 +4,87 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../../lib/auth';
 import { Award, FileText, FileSearch, Globe, GraduationCap, TrendingUp, Users, Check, Ban, Download, Search, Filter, ChevronDown, ChevronUp, ShieldCheck, BookOpen, FileEdit, Briefcase, Building } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { type } from 'os';
 
 // Data structure for different module types
 const MODULE_TYPES = {
     seminars: {
-      name: 'Seminars/Conferences/Workshops/FDPs/Guest Lectures',
+      name: 'Seminars',
       icon: FileText,
       apiEndpoint: 's-c-w-fdp-g',
+      type: 'Seminar',
+      fields: [
+        { key: 'empId', label: 'Employee ID' },
+        { key: 'employee', label: 'Employee Name' },
+        { key: 'title', label: 'Event Title' },
+        { key: 'type1', label: 'Event Type' },
+        { key: 'type2', label: 'Participation Type' },
+        { key: 'type3', label: 'Place Type' },
+        { key: 'host', label: 'Host' },
+        { key: 'agency', label: 'Sponsoring Agency' },
+        { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+      ]
+    },
+    conferences: {
+      name: 'Conferences',
+      icon: FileText,
+      apiEndpoint: 's-c-w-fdp-g',
+      type: 'Conference',
+      fields: [
+        { key: 'empId', label: 'Employee ID' },
+        { key: 'employee', label: 'Employee Name' },
+        { key: 'title', label: 'Event Title' },
+        { key: 'type1', label: 'Event Type' },
+        { key: 'type2', label: 'Participation Type' },
+        { key: 'type3', label: 'Place Type' },
+        { key: 'host', label: 'Host' },
+        { key: 'agency', label: 'Sponsoring Agency' },
+        { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+      ]
+    },
+    workshops: {
+      name: 'Workshops',
+      icon: FileText,
+      apiEndpoint: 's-c-w-fdp-g',
+      type: 'Workshop',
+      fields: [
+        { key: 'empId', label: 'Employee ID' },
+        { key: 'employee', label: 'Employee Name' },
+        { key: 'title', label: 'Event Title' },
+        { key: 'type1', label: 'Event Type' },
+        { key: 'type2', label: 'Participation Type' },
+        { key: 'type3', label: 'Place Type' },
+        { key: 'host', label: 'Host' },
+        { key: 'agency', label: 'Sponsoring Agency' },
+        { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+      ]
+    },
+    fdp: {
+      name: 'FDPs',
+      icon: FileText,
+      apiEndpoint: 's-c-w-fdp-g',
+      type: 'FDP',
+      fields: [
+        { key: 'empId', label: 'Employee ID' },
+        { key: 'employee', label: 'Employee Name' },
+        { key: 'title', label: 'Event Title' },
+        { key: 'type1', label: 'Event Type' },
+        { key: 'type2', label: 'Participation Type' },
+        { key: 'type3', label: 'Place Type' },
+        { key: 'host', label: 'Host' },
+        { key: 'agency', label: 'Sponsoring Agency' },
+        { key: 'date1', label: 'Start Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' },
+        { key: 'date2', label: 'End Date', format: (value) => value ? new Date(value).toLocaleDateString() : '-' }
+      ]
+    },
+    guestLectures: {
+      name: 'Guest Lectures',
+      icon: FileText,
+      apiEndpoint: 's-c-w-fdp-g',
+      type: 'GuestLecture',
       fields: [
         { key: 'empId', label: 'Employee ID' },
         { key: 'employee', label: 'Employee Name' },
@@ -248,6 +322,10 @@ export default function ReviewPage() {
   const [moduleData, setModuleData] = useState({
     awards: [],
     seminars: [],
+    conferences: [],
+    workshops: [],
+    fdp: [],
+    guestLectures: [],
     phd: [],
     phdguiding: [],
     journals: [],
@@ -264,6 +342,10 @@ export default function ReviewPage() {
   const [loading, setLoading] = useState({
     awards: false,
     seminars: false,
+    conferences: false,
+    workshops: false,
+    fdp: false,
+    guestLectures: false,
     phd: false,
     phdguiding: false,
     journals: false,
@@ -317,9 +399,8 @@ export default function ReviewPage() {
     try {
       setLoading(prev => ({ ...prev, [moduleType]: true }));
       setErrors(prev => ({ ...prev, [moduleType]: null }));
-
-      const url = `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending`;
-
+      const url = !['Seminar', 'Conference', 'Workshop', 'FDP', 'GuestLecture'].includes(MODULE_TYPES[moduleType].type) ? `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending` : `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending&type=${MODULE_TYPES[moduleType].type}`;
+      console.log('Fetching from URL:', url);
       // Use cache if available and not too old
       if (cache[moduleType] && Date.now() - cache[moduleType].timestamp < 60_000) { // 1 min cache
         setModuleData(prev => ({ ...prev, [moduleType]: cache[moduleType].data }));
