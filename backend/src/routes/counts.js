@@ -69,6 +69,43 @@ router.get('/', auth, async (req, res) => {
       baseQuery.academic_year = academic_year;
     }
 
+  const seminarTypeCounts = await Promise.all([
+    // Seminar
+    Promise.all([
+      Seminar.countDocuments({ ...baseQuery, type1: 'Seminar' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Seminar', status: 'Accepted' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Seminar', status: 'Pending' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Seminar', status: 'Rejected' })
+    ]),
+    // Conference
+    Promise.all([
+      Seminar.countDocuments({ ...baseQuery, type1: 'Conference' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Conference', status: 'Accepted' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Conference', status: 'Pending' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Conference', status: 'Rejected' })
+    ]),
+    // Workshop
+    Promise.all([
+      Seminar.countDocuments({ ...baseQuery, type1: 'Workshop' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Workshop', status: 'Accepted' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Workshop', status: 'Pending' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'Workshop', status: 'Rejected' })
+    ]),
+    // FDP
+    Promise.all([
+      Seminar.countDocuments({ ...baseQuery, type1: 'FDP' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'FDP', status: 'Accepted' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'FDP', status: 'Pending' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'FDP', status: 'Rejected' })
+    ]),
+    // GuestLecture
+    Promise.all([
+      Seminar.countDocuments({ ...baseQuery, type1: 'GuestLecture' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'GuestLecture', status: 'Accepted' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'GuestLecture', status: 'Pending' }),
+      Seminar.countDocuments({ ...baseQuery, type1: 'GuestLecture', status: 'Rejected' })
+    ])
+  ]);
     // Count documents across all collections with status breakdown
     const [
       awards, books, consultancies, infrastructures, 
@@ -267,6 +304,38 @@ router.get('/', auth, async (req, res) => {
         accepted: seminars[1],
         pending: seminars[2],
         rejected: seminars[3]
+      },
+      seminarTypes: {
+        seminar: {
+          total: seminarTypeCounts[0][0],
+          accepted: seminarTypeCounts[0][1],
+          pending: seminarTypeCounts[0][2],
+          rejected: seminarTypeCounts[0][3]
+        },
+        conference: {
+          total: seminarTypeCounts[1][0],
+          accepted: seminarTypeCounts[1][1],
+          pending: seminarTypeCounts[1][2],
+          rejected: seminarTypeCounts[1][3]
+        },
+        workshop: {
+          total: seminarTypeCounts[2][0],
+          accepted: seminarTypeCounts[2][1],
+          pending: seminarTypeCounts[2][2],
+          rejected: seminarTypeCounts[2][3]
+        },
+        fdp: {
+          total: seminarTypeCounts[3][0],
+          accepted: seminarTypeCounts[3][1],
+          pending: seminarTypeCounts[3][2],
+          rejected: seminarTypeCounts[3][3]
+        },
+        guestLecture: {
+          total: seminarTypeCounts[4][0],
+          accepted: seminarTypeCounts[4][1],
+          pending: seminarTypeCounts[4][2],
+          rejected: seminarTypeCounts[4][3]
+        }
       },
       visits: {
         total: visits[0],

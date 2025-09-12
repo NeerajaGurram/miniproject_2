@@ -400,7 +400,7 @@ export default function ReviewPage() {
       setLoading(prev => ({ ...prev, [moduleType]: true }));
       setErrors(prev => ({ ...prev, [moduleType]: null }));
       const url = !['Seminar', 'Conference', 'Workshop', 'FDP', 'GuestLecture'].includes(MODULE_TYPES[moduleType].type) ? `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending` : `${process.env.NEXT_PUBLIC_API_URL}/${MODULE_TYPES[moduleType].apiEndpoint}?status=Pending&type=${MODULE_TYPES[moduleType].type}`;
-      console.log('Fetching from URL:', url);
+      // console.log('Fetching from URL:', url);
       // Use cache if available and not too old
       if (cache[moduleType] && Date.now() - cache[moduleType].timestamp < 60_000) { // 1 min cache
         setModuleData(prev => ({ ...prev, [moduleType]: cache[moduleType].data }));

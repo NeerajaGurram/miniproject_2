@@ -181,6 +181,76 @@ const columnConfig = {
       { key: 'status', label: 'Approval Status' }
     ]
   },
+    SEMINAR: {
+    columns: [
+      { key: 'empId', label: 'Employee ID' },
+      { key: 'employee', label: 'Employee Name' },
+      { key: 'title', label: 'Event Title' },
+      { key: 'type1', label: 'Event Type' },
+      { key: 'type2', label: 'Participation Type' },
+      { key: 'type3', label: 'Place Type' },
+      { key: 'host', label: 'Host' },
+      { key: 'agency', label: 'Sponsoring Agency' },
+      { key: 'date1', label: 'Start Date' },
+      { key: 'date2', label: 'End Date' }
+    ]
+  },
+  CONFERENCE: {
+    columns: [
+      { key: 'empId', label: 'Employee ID' },
+      { key: 'employee', label: 'Employee Name' },
+      { key: 'title', label: 'Event Title' },
+      { key: 'type1', label: 'Event Type' },
+      { key: 'type2', label: 'Participation Type' },
+      { key: 'type3', label: 'Place Type' },
+      { key: 'host', label: 'Host' },
+      { key: 'agency', label: 'Sponsoring Agency' },
+      { key: 'date1', label: 'Start Date' },
+      { key: 'date2', label: 'End Date' }
+    ]
+  },
+  WORKSHOP: {
+    columns: [
+      { key: 'empId', label: 'Employee ID' },
+      { key: 'employee', label: 'Employee Name' },
+      { key: 'title', label: 'Event Title' },
+      { key: 'type1', label: 'Event Type' },
+      { key: 'type2', label: 'Participation Type' },
+      { key: 'type3', label: 'Place Type' },
+      { key: 'host', label: 'Host' },
+      { key: 'agency', label: 'Sponsoring Agency' },
+      { key: 'date1', label: 'Start Date' },
+      { key: 'date2', label: 'End Date' }
+    ]
+  },
+  FDP: {
+    columns: [
+      { key: 'empId', label: 'Employee ID' },
+      { key: 'employee', label: 'Employee Name' },
+      { key: 'title', label: 'Event Title' },
+      { key: 'type1', label: 'Event Type' },
+      { key: 'type2', label: 'Participation Type' },
+      { key: 'type3', label: 'Place Type' },
+      { key: 'host', label: 'Host' },
+      { key: 'agency', label: 'Sponsoring Agency' },
+      { key: 'date1', label: 'Start Date' },
+      { key: 'date2', label: 'End Date' }
+    ]
+  },
+  'GUEST-LECTURE': {
+    columns: [
+      { key: 'empId', label: 'Employee ID' },
+      { key: 'employee', label: 'Employee Name' },
+      { key: 'title', label: 'Event Title' },
+      { key: 'type1', label: 'Event Type' },
+      { key: 'type2', label: 'Participation Type' },
+      { key: 'type3', label: 'Place Type' },
+      { key: 'host', label: 'Host' },
+      { key: 'agency', label: 'Sponsoring Agency' },
+      { key: 'date1', label: 'Start Date' },
+      { key: 'date2', label: 'End Date' }
+    ]
+  },
   'RESEARCH-GRANTS': {
     columns: [
       { key: 'empId', label: 'Employee ID' },

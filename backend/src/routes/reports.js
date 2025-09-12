@@ -52,6 +52,12 @@ router.get('/debug/:type', auth, async (req, res) => {
     switch(type) {
       case 'S/C/W/FDP/G':
         Model = Seminar;
+        // Use the specific type filter if provided, otherwise show all seminar types
+        if (req.query.type1) {
+          query.type1 = req.query.type1;
+        } else {
+          query.type1 = { $in: ['Seminar', 'Conference', 'Workshop', 'FDP', 'Guest Lecture'] };
+        }
         break;
       case 'PHD':
         Model = Phd;
@@ -134,7 +140,11 @@ router.get('/data', auth, async (req, res) => {
     switch(type) {
       case 'S/C/W/FDP/G':
         Model = Seminar;
-        query.type1 = { $in: ['Seminar', 'Conference', 'Workshop', 'FDP', 'Guest Lecture'] };
+        if (req.query.type1) {
+          query.type1 = req.query.type1;
+        } else {
+          query.type1 = { $in: ['Seminar', 'Conference', 'Workshop', 'FDP', 'GuestLecture'] };
+        }
         break;
       case 'PHD':
         Model = Phd;
@@ -373,6 +383,12 @@ async function handleSummaryReport(res, year, department, excelFormat) {
         empId: { $in: facultyEmpIds },
         type1: { $in: ['Seminar', 'Conference', 'Workshop', 'FDP', 'Guest Lecture'] }
       }).catch(() => 0),
+      // Individual seminar types
+      Seminar.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds }, type1: 'Seminar' }).catch(() => 0),
+      Seminar.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds }, type1: 'Conference' }).catch(() => 0),
+      Seminar.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds }, type1: 'Workshop' }).catch(() => 0),
+      Seminar.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds }, type1: 'FDP' }).catch(() => 0),
+      Seminar.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds }, type1: 'GuestLecture' }).catch(() => 0),
       Phd.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds } }).catch(() => 0),
       PhdGuiding.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds } }).catch(() => 0),
       Journal.countDocuments({ ...dateFilter, empId: { $in: facultyEmpIds } }).catch(() => 0),
@@ -390,7 +406,7 @@ async function handleSummaryReport(res, year, department, excelFormat) {
 
     // Format summary data
     const reportTypes = [
-      'S/C/W/FDP/G', 'PHD', 'PHD-GUIDING', 'JOURNALS',
+      'S/C/W/FDP/G', 'SEMINAR', 'CONFERENCE', 'WORKSHOP', 'FDP', 'GUEST-LECTURE', 'PHD', 'PHD-GUIDING', 'JOURNALS',
       'BOOKS', 'JOURNAL-EDITED', 'RESEARCH-GRANTS', 'PATENTS',
       'QUALIFICATIONS', 'VISITS', 'AWARDS', 'MEMBERSHIP',
       'CONSULTANCY', 'INFRASTRUCTURE'
@@ -468,381 +484,5 @@ router.get('/academic-years', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch academic years' });
   }
 });
-
-
-// // Generate automatic report
-// router.post('/generate', auth, validateReport, async (req, res) => {
-//   try {
-//     const errors = validationResult(req);
-//     if (!errors.isEmpty()) {
-//       return res.status(400).json({ 
-//         error: 'Validation failed', 
-//         details: errors.array() 
-//       });
-//     }
-
-//     const { year, semester, reportType } = req.body;
-//     const facultyId = req.user.role === 'faculty' ? req.user._id : req.body.facultyId;
-
-//     if (!facultyId && req.user.role === 'faculty') {
-//       return res.status(400).json({ 
-//         error: 'Faculty ID is required' 
-//       });
-//     }
-
-//     // Check if report already exists
-//     const existingReport = await Report.findOne({
-//       facultyId,
-//       year,
-//       semester,
-//       reportType
-//     });
-
-//     if (existingReport) {
-//       return res.status(400).json({ 
-//         error: 'Report for this period already exists' 
-//       });
-//     }
-
-//     // Generate report data
-//     const reportData = await Report.generateReport(facultyId, year, semester);
-//     reportData.generatedBy = req.user._id;
-
-//     const report = new Report(reportData);
-//     await report.save();
-
-//     await report.populate('faculty', 'name email department');
-
-//     res.status(201).json({
-//       message: 'Report generated successfully',
-//       report
-//     });
-//   } catch (error) {
-//     console.error('Generate report error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to generate report' 
-//     });
-//   }
-// });
-
-// // Get reports for faculty
-// router.get('/faculty/:facultyId', auth, authorizeFaculty, async (req, res) => {
-//   try {
-//     const { facultyId } = req.params;
-//     const { page = 1, limit = 10, year, semester } = req.query;
-
-//     const filter = { facultyId };
-//     if (year) filter.year = parseInt(year);
-//     if (semester) filter.semester = semester;
-
-//     const reports = await Report.find(filter)
-//       .populate('faculty', 'name email department')
-//       .populate('generatedBy', 'name')
-//       .populate('approvedBy', 'name')
-//       .limit(limit * 1)
-//       .skip((page - 1) * limit)
-//       .sort({ year: -1, semester: -1 });
-
-//     const total = await Report.countDocuments(filter);
-
-//     res.json({
-//       reports,
-//       totalPages: Math.ceil(total / limit),
-//       currentPage: parseInt(page),
-//       total
-//     });
-//   } catch (error) {
-//     console.error('Get faculty reports error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to get faculty reports' 
-//     });
-//   }
-// });
-
-// // Get department reports (admin/Incharge only)
-// router.get('/department/:department', auth, authorize('admin', 'incharge'), async (req, res) => {
-//   try {
-//     const { department } = req.params;
-//     const { page = 1, limit = 10, year } = req.query;
-
-//     const filter = { year: year ? parseInt(year) : new Date().getFullYear() };
-
-//     // Get faculty IDs for the department
-//     const User = require('../models/User');
-//     const facultyIds = await User.find({ 
-//       department, 
-//       role: 'faculty',
-//       isActive: true 
-//     }).select('_id');
-
-//     const facultyIdArray = facultyIds.map(f => f._id);
-//     filter.facultyId = { $in: facultyIdArray };
-
-//     const reports = await Report.find(filter)
-//       .populate('faculty', 'name email department')
-//       .populate('generatedBy', 'name')
-//       .populate('approvedBy', 'name')
-//       .limit(limit * 1)
-//       .skip((page - 1) * limit)
-//       .sort({ year: -1, semester: -1 });
-
-//     const total = await Report.countDocuments(filter);
-
-//     res.json({
-//       reports,
-//       totalPages: Math.ceil(total / limit),
-//       currentPage: parseInt(page),
-//       total
-//     });
-//   } catch (error) {
-//     console.error('Get department reports error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to get department reports' 
-//     });
-//   }
-// });
-
-// // Get summary reports (admin/Incharge only)
-// router.get('/summary', auth, authorize('admin', 'incharge'), async (req, res) => {
-//   try {
-//     const { year = new Date().getFullYear(), department } = req.query;
-
-//     const filter = { year: parseInt(year) };
-
-//     if (department) {
-//       const User = require('../models/User');
-//       const facultyIds = await User.find({ 
-//         department, 
-//         role: 'faculty',
-//         isActive: true 
-//       }).select('_id');
-
-//       const facultyIdArray = facultyIds.map(f => f._id);
-//       filter.facultyId = { $in: facultyIdArray };
-//     }
-
-//     const reports = await Report.find(filter)
-//       .populate('faculty', 'name email department');
-
-//     // Calculate summary statistics
-//     const summary = reports.reduce((acc, report) => {
-//       Object.keys(report.data).forEach(key => {
-//         if (!acc[key]) acc[key] = 0;
-//         acc[key] += report.data[key];
-//       });
-
-//       Object.keys(report.financialData).forEach(key => {
-//         if (!acc[key]) acc[key] = 0;
-//         acc[key] += report.financialData[key];
-//       });
-
-//       return acc;
-//     }, {});
-
-//     // Get faculty count
-//     const User = require('../models/User');
-//     const facultyFilter = { role: 'faculty', isActive: true };
-//     if (department) facultyFilter.department = department;
-//     const facultyCount = await User.countDocuments(facultyFilter);
-
-//     res.json({
-//       year: parseInt(year),
-//       department,
-//       facultyCount,
-//       reportsSubmitted: reports.length,
-//       summary,
-//       reports: reports.map(r => ({
-//         id: r._id,
-//         faculty: r.faculty.name,
-//         semester: r.semester,
-//         totalResearch: r.totalResearch,
-//         totalFinancialValue: r.totalFinancialValue,
-//         status: r.status
-//       }))
-//     });
-//   } catch (error) {
-//     console.error('Get summary reports error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to get summary reports' 
-//     });
-//   }
-// });
-
-// // Update report
-// router.put('/:id', auth, async (req, res) => {
-//   try {
-//     const { highlights, achievements, challenges, goals, status } = req.body;
-
-//     const report = await Report.findById(req.params.id);
-//     if (!report) {
-//       return res.status(404).json({ 
-//         error: 'Report not found' 
-//       });
-//     }
-
-//     // Check permissions
-//     if (req.user.role === 'faculty' && report.facultyId.toString() !== req.user._id.toString()) {
-//       return res.status(403).json({ 
-//         error: 'Access denied' 
-//       });
-//     }
-
-//     const updateData = {};
-//     if (highlights) updateData.highlights = highlights;
-//     if (achievements) updateData.achievements = achievements;
-//     if (challenges) updateData.challenges = challenges;
-//     if (goals) updateData.goals = goals;
-//     if (status) updateData.status = status;
-
-//     if (status === 'submitted') {
-//       updateData.submittedAt = new Date();
-//     }
-
-//     const updatedReport = await Report.findByIdAndUpdate(
-//       req.params.id,
-//       updateData,
-//       { new: true }
-//     ).populate('faculty', 'name email department');
-
-//     res.json({
-//       message: 'Report updated successfully',
-//       report: updatedReport
-//     });
-//   } catch (error) {
-//     console.error('Update report error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to update report' 
-//     });
-//   }
-// });
-
-// // Approve report (admin/Incharge only)
-// router.put('/:id/approve', auth, authorize('admin', 'incharge'), async (req, res) => {
-//   try {
-//     const { status, comments } = req.body;
-
-//     if (!['approved', 'rejected'].includes(status)) {
-//       return res.status(400).json({ 
-//         error: 'Invalid status. Must be "approved" or "rejected"' 
-//       });
-//     }
-
-//     const report = await Report.findById(req.params.id);
-//     if (!report) {
-//       return res.status(404).json({ 
-//         error: 'Report not found' 
-//       });
-//     }
-
-//     const updateData = {
-//       status,
-//       approvedBy: req.user._id,
-//       approvedAt: new Date()
-//     };
-
-//     if (comments) {
-//       updateData.comments = [
-//         ...report.comments,
-//         {
-//           user: req.user._id,
-//           comment: comments
-//         }
-//       ];
-//     }
-
-//     const updatedReport = await Report.findByIdAndUpdate(
-//       req.params.id,
-//       updateData,
-//       { new: true }
-//     ).populate('faculty', 'name email department')
-//      .populate('approvedBy', 'name');
-
-//     res.json({
-//       message: `Report ${status} successfully`,
-//       report: updatedReport
-//     });
-//   } catch (error) {
-//     console.error('Approve report error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to approve report' 
-//     });
-//   }
-// });
-
-// // Delete report
-// router.delete('/:id', auth, async (req, res) => {
-//   try {
-//     const report = await Report.findById(req.params.id);
-//     if (!report) {
-//       return res.status(404).json({ 
-//         error: 'Report not found' 
-//       });
-//     }
-
-//     // Check permissions
-//     if (req.user.role === 'faculty' && report.facultyId.toString() !== req.user._id.toString()) {
-//       return res.status(403).json({ 
-//         error: 'Access denied' 
-//       });
-//     }
-
-//     await Report.findByIdAndDelete(req.params.id);
-
-//     res.json({ 
-//       message: 'Report deleted successfully' 
-//     });
-//   } catch (error) {
-//     console.error('Delete report error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to delete report' 
-//     });
-//   }
-// });
-
-// // Get report statistics
-// router.get('/stats/overview', auth, async (req, res) => {
-//   try {
-//     const { year = new Date().getFullYear() } = req.query;
-//     const filter = { year: parseInt(year) };
-
-//     // Apply faculty filter if user is faculty
-//     if (req.user.role === 'faculty') {
-//       filter.facultyId = req.user._id;
-//     }
-
-//     const totalReports = await Report.countDocuments(filter);
-//     const submittedReports = await Report.countDocuments({ ...filter, status: 'submitted' });
-//     const approvedReports = await Report.countDocuments({ ...filter, status: 'approved' });
-//     const rejectedReports = await Report.countDocuments({ ...filter, status: 'rejected' });
-
-//     // Get reports by semester
-//     const semesterStats = await Report.aggregate([
-//       { $match: filter },
-//       {
-//         $group: {
-//           _id: '$semester',
-//           count: { $sum: 1 },
-//           submitted: { $sum: { $cond: [{ $eq: ['$status', 'submitted'] }, 1, 0] } },
-//           approved: { $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] } },
-//           rejected: { $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] } }
-//         }
-//       }
-//     ]);
-
-//     res.json({
-//       year: parseInt(year),
-//       totalReports,
-//       submittedReports,
-//       approvedReports,
-//       rejectedReports,
-//       semesterStats
-//     });
-//   } catch (error) {
-//     console.error('Get report stats error:', error);
-//     res.status(500).json({ 
-//       error: 'Failed to get report statistics' 
-//     });
-//   }
-// });
 
 module.exports = router; 
