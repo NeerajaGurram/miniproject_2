@@ -344,7 +344,6 @@ router.get('/', auth, async (req, res) => {
         rejected: visits[3]
       }
     });
-    
   } catch (error) {
     console.error('Error fetching counts:', error);
     res.status(500).json({ error: 'Internal server error' });
