@@ -116,7 +116,7 @@ export default function ReportViewPage() {
 
   const branchOptions = {
     'CSE': 'Computer Science Engineering',
-    'IT': 'Information Technology Engineering',
+    'IT': 'Information Technology',
     'ECE': 'Electronics and Communication Engineering',
     'EEE': 'Electrical and Electronics Engineering',
     'EIE': 'Electrical and Instrumentation Engineering',

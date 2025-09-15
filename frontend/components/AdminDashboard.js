@@ -7,25 +7,35 @@ import { Download } from 'lucide-react';
 
 const researchTypeLabels = {
   all: 'Summary',
-  seminar: 'S/C/W/FDP/G',
-  phd: 'PhD',
-  phdguiding: 'PhD Guiding',
+  seminar_conf: 'S/C/W/FDP/G',
+  seminar: 'Seminars',
+  conference: 'Conferences',
+  workshop: 'Workshops',
+  fdp: 'FDPs',
+  guestLecture: 'Guest Lectures',
+  phd: 'PhDs',
+  phdguiding: 'PhD Guidings',
   journal: 'Journals',
   book: 'Books',
   journaledited: 'Journal Edited',
   researchgrant: 'Research Grants',
   patent: 'Patents',
-  qualification: 'Qualification',
+  qualification: 'Qualifications',
   visit: 'Visits',
   award: 'Awards',
-  membership: 'Membership',
-  consultancy: 'Consultancy',
-  infrastructure: 'Infrastructure',
+  membership: 'Memberships',
+  consultancy: 'Consultancies',
+  infrastructure: 'Infrastructures',
 };
 
 // Map frontend type keys to backend report type values
 const typeToReportMap = {
-  seminar: 'S/C/W/FDP/G',
+  seminar_conf: 'S/C/W/FDP/G',
+  seminar: 'Seminar',
+  conference: 'Conference', 
+  workshop: 'Workshop',
+  fdp: 'FDP',
+  guestLecture: 'GuestLecture', 
   phd: 'PHD',
   phdguiding: 'PHD-GUIDING',
   journal: 'JOURNALS',
@@ -44,7 +54,7 @@ const typeToReportMap = {
 // Department options
 const departmentOptions = {
   'CSE': 'Computer Science Engineering',
-  'IT': 'Information Technology Engineering',
+  'IT': 'Information Technology',
   'ECE': 'Electronics and Communication Engineering',
   'EEE': 'Electrical and Electronics Engineering',
   'EIE': 'Electrical and Instrumentation Engineering',
@@ -195,7 +205,12 @@ export default function AdminDashboard() {
     
     // Map selected type to the correct data key
     const keyMap = {
-      seminar: 'seminars',
+      seminar_conf: 'seminars',
+      seminar: 'seminarTypes.seminar',
+      conference: 'seminarTypes.conference',
+      workshop: 'seminarTypes.workshop',
+      fdp: 'seminarTypes.fdp',
+      guestLecture: 'seminarTypes.guestLecture',
       phd: 'phds',
       phdguiding: 'phdsGuiding',
       journal: 'journals',
@@ -210,6 +225,12 @@ export default function AdminDashboard() {
       consultancy: 'consultancies',
       infrastructure: 'infrastructures',
     };
+
+  if (['seminar', 'conference', 'workshop', 'fdp', 'guestLecture'].includes(selectedType)) {
+      const dataSource = filteredCounts || allCounts;
+      // Access nested seminarTypes property
+      return dataSource?.seminarTypes?.[selectedType] || null;
+    }
     
     const dataKey = keyMap[selectedType];
     // Use filtered data if available, otherwise use all data
@@ -220,10 +241,17 @@ export default function AdminDashboard() {
   // Download Excel for a specific research type
   const downloadExcel = async (type) => {
     try {
-      const reportType = typeToReportMap[type];
+      let reportType = typeToReportMap[type];
+      let additionalParams = {};
       if (!reportType) {
         toast.error('Download not available for this type');
         return;
+      }
+      
+      // Handle seminar types specially - they all use the same endpoint but different filters
+      if (['seminar', 'conference', 'workshop', 'fdp', 'guestLecture'].includes(type)) {
+        reportType = 'S/C/W/FDP/G';
+        additionalParams.type1 = typeToReportMap[type]; 
       }
 
       const params = new URLSearchParams({ 
@@ -231,6 +259,10 @@ export default function AdminDashboard() {
         format: 'excel',
         ...(filters.department && { branch: filters.department }), 
         ...(filters.academicYear && { year: filters.academicYear }) 
+      });
+
+      Object.keys(additionalParams).forEach(key => {
+        params.append(key, additionalParams[key]);
       });
       
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports/data?${params}`, {
@@ -240,14 +272,15 @@ export default function AdminDashboard() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to download report');
+        const errorText = await response.text();
+        throw new Error(`Failed to download report: ${response.status} - ${errorText}`);
       }
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_${filters.academicYear || 'all'}_${filters.department || 'all'}_report.xlsx`;
+      a.download = `${reportType}_${type}_${filters.academicYear || 'all'}_${filters.department || 'all'}_report.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -410,8 +443,23 @@ export default function AdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
+                      {/* Seminar types */}
+                      {['seminar', 'conference', 'workshop', 'fdp', 'guestLecture'].map(typeKey => {
+                        const data = displayData.seminarTypes?.[typeKey] || {};
+                        return (
+                          <tr key={typeKey} className="hover:bg-gray-50 cursor-pointer" onClick={() => downloadExcel(typeKey)}>
+                            <td className="py-3 px-4 text-sm font-medium text-gray-900 cursor-pointer">
+                              {researchTypeLabels[typeKey]}
+                            </td>
+                            <td className="py-3 px-4 text-center text-sm text-gray-700">{data.total || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-green-600">{data.accepted || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-yellow-600">{data.pending || 0}</td>
+                            <td className="py-3 px-4 text-center text-sm text-red-600">{data.rejected || 0}</td>
+                          </tr>
+                        );
+                      })}
                       {Object.entries({
-                        seminar: 'seminars',
+                        seminar_conf: 'seminars',
                         phd: 'phds',
                         phdguiding: 'phdsGuiding',
                         journal: 'journals',
