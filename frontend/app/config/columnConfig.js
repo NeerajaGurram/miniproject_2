@@ -128,6 +128,7 @@ export const columnConfig = {
     columns: [
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
+      { key: 'department', label: 'Department' },
       { key: 'university', label: 'University' },
       { key: 'special', label: 'Specialization' },
       { key: 'guide', label: 'Guide Name' },
@@ -142,6 +143,7 @@ export const columnConfig = {
     columns: [
       { key: 'empId', label: 'Employee ID' },
       { key: 'employee', label: 'Employee Name' },
+      { key: 'department', label: 'Department' },
       { key: 'university', label: 'University' },
       { key: 'special', label: 'Specialization' },
       { key: 'name', label: 'Scholar Name' },

@@ -280,7 +280,7 @@ export default function AdminDashboard() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${reportType}_${type}_${filters.academicYear || 'all'}_${filters.department || 'all'}_report.xlsx`;
+      a.download = (reportType !== 'S/C/W/FDP/G') ? `${reportType}_${filters.academicYear || 'all'}_${filters.department || 'all'}_report.xlsx` : `${reportType}_${type}_${filters.academicYear || 'all'}_${filters.department || 'all'}_report.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
