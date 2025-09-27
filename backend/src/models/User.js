@@ -4,8 +4,9 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   empId: { 
     type: String,
-    required: true,
+    required: function() { return !this.googleId; }, // Required only for non-Google users
     unique: true,
+    sparse: true, // Allow multiple nulls for Google users
     trim: true
   },
   name: { 
@@ -22,8 +23,13 @@ const userSchema = new mongoose.Schema({
   },
   password: { 
     type: String, 
-    required: true,
+    required: function() { return !this.googleId; }, // Required only for non-Google users
     minlength: 6
+  },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true
   },
   role: { 
     type: String, 
@@ -33,7 +39,7 @@ const userSchema = new mongoose.Schema({
   department: { 
     type: String,
     enum: ['CSE', 'IT', 'ECE', 'EEE', 'EIE', 'ME', 'CE'],
-    required: true,
+    required: function() { return !this.googleId; }, // Required only for non-Google users
     trim: true
   },
   designation: { 
@@ -60,7 +66,7 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: Date,
   emailVerified: {
     type: Boolean,
-    default: false
+    default: function() { return !!this.googleId; } // Auto-verified for Google users
   },
   emailVerificationToken: String,
   emailVerificationExpires: Date

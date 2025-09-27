@@ -130,7 +130,7 @@ export default function DashboardLayout({ children }) {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center px-2 py-2 text-sm font-medium text-brand-primary rounded-md hover:bg-brand-highlight hover:text-brand-primary mt-2 transition-colors"
+                className="cursor-pointer flex w-full items-center px-2 py-2 text-sm font-medium text-brand-primary rounded-md hover:bg-brand-highlight hover:text-brand-primary mt-2 transition-colors"
               >
                 <LogOut className="mr-3 h-5 w-5" />
                 Logout
@@ -180,7 +180,7 @@ export default function DashboardLayout({ children }) {
               </div>
               <button
                 onClick={handleLogout}
-                className="flex w-full items-center px-2 py-2 text-sm font-medium text-brand-primary rounded-md hover:bg-brand-highlight hover:text-brand-primary mt-2 transition-colors"
+                className="cursor-pointer flex w-full items-center px-2 py-2 text-sm font-medium text-brand-primary rounded-md hover:bg-brand-highlight hover:text-brand-primary mt-2 transition-colors"
               >
                 <LogOut className="mr-3 h-5 w-5" />
                 Logout
@@ -240,7 +240,7 @@ export default function DashboardLayout({ children }) {
 
             <button
               onClick={handleLogout}
-              className="flex items-center gap-x-2 text-sm font-medium text-brand-primary hover:text-brand-accent transition-colors"
+              className="cursor-pointer flex items-center gap-x-2 text-sm font-medium text-brand-primary hover:text-brand-accent transition-colors"
             >
               <LogOut className="h-5 w-5" />
               <span className="hidden lg:block">Logout</span>

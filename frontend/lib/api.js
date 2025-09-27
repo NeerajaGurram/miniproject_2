@@ -53,6 +53,7 @@ export const authAPI = {
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
   changePassword: (data) => api.put('/auth/change-password', data),
+  googleLogin: (token) => api.post('/auth/google', { token }),
 };
 
 // Research API

@@ -104,6 +104,24 @@ useEffect(() => {
   }
 };
 
+// Add this method to your auth context
+const googleLogin = async (googleToken) => {
+  try {
+    const response = await authAPI.googleLogin(googleToken);
+    const { user, token } = response.data;
+
+    setUser(user);
+    setToken(token);
+    localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    return { success: true };
+  } catch (error) {
+    const message = error.response?.data?.error || 'Google login failed';
+    return { success: false, error: message };
+  }
+};
+
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
@@ -192,6 +210,7 @@ useEffect(() => {
     logout,
     updateProfile,
     changePassword,
+    googleLogin,
   };
 
   return (

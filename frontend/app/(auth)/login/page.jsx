@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../../lib/auth';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
+import GoogleLoginButton from '../../../components/GoogleLoginButton';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -164,6 +165,17 @@ export default function LoginPage() {
                 )}
               </button>
             </div>
+              {/* Add Google login */}
+              <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                </div>
+              </div>
+
+              <GoogleLoginButton />
 
             <div className="text-center">
               <p className="text-sm text-gray-600">
